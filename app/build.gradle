@@ -14,9 +14,22 @@ android {
         versionName '1.1.0'
     }
 
+    signingConfigs {
+        stableSideload {
+            storeFile file('../signing/ledgerbook-lite.jks')
+            storePassword 'ledgerbook123'
+            keyAlias 'ledgerbook'
+            keyPassword 'ledgerbook123'
+        }
+    }
+
     buildTypes {
+        debug {
+            signingConfig signingConfigs.stableSideload
+        }
         release {
             minifyEnabled false
+            signingConfig signingConfigs.stableSideload
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
