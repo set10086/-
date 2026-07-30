@@ -41,15 +41,21 @@ jobs:
         with:
           gradle-version: '8.7'
 
-      - name: Prepare V1.1 source
+      - name: Prepare V1.1 source and signing key
         run: |
           sed -i '/dialog.setOnShowListener(dialog.getOnShowListener());/d' app/src/main/java/com/ledgerbook/lite/CartoonActivity.java
+          base64 --decode signing/ledgerbook-lite.jks.b64 > signing/ledgerbook-lite.jks
+          keytool -list -keystore signing/ledgerbook-lite.jks -storepass ledgerbook123 -alias ledgerbook >/dev/null
 
       - name: Run unit tests
         run: gradle --no-daemon --stacktrace :app:testDebugUnitTest
 
       - name: Build debug APK
         run: gradle --no-daemon --stacktrace :app:assembleDebug
+
+      - name: Verify APK signature
+        run: |
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose --print-certs app/build/outputs/apk/debug/app-debug.apk
 
       - name: Prepare artifact
         run: |
