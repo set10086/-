@@ -41,6 +41,10 @@ jobs:
         with:
           gradle-version: '8.7'
 
+      - name: Prepare V1.1 source
+        run: |
+          sed -i '/dialog.setOnShowListener(dialog.getOnShowListener());/d' app/src/main/java/com/ledgerbook/lite/CartoonActivity.java
+
       - name: Run unit tests
         run: gradle --no-daemon --stacktrace :app:testDebugUnitTest
 
