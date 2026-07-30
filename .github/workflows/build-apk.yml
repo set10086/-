@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - ledgerbook-lite-apk
+      - ledgerbook-lite-v1.1-cartoon
   pull_request:
     branches:
       - main
@@ -40,20 +41,23 @@ jobs:
         with:
           gradle-version: '8.7'
 
+      - name: Run unit tests
+        run: gradle --no-daemon --stacktrace :app:testDebugUnitTest
+
       - name: Build debug APK
         run: gradle --no-daemon --stacktrace :app:assembleDebug
 
       - name: Prepare artifact
         run: |
-          cp app/build/outputs/apk/debug/app-debug.apk LedgerBook-Lite-v1.0.0.apk
-          sha256sum LedgerBook-Lite-v1.0.0.apk > LedgerBook-Lite-v1.0.0.sha256
+          cp app/build/outputs/apk/debug/app-debug.apk LedgerBook-Lite-v1.1.0-Cartoon.apk
+          sha256sum LedgerBook-Lite-v1.1.0-Cartoon.apk > LedgerBook-Lite-v1.1.0-Cartoon.sha256
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: LedgerBook-Lite-APK
+          name: LedgerBook-Lite-V1.1-Cartoon-APK
           path: |
-            LedgerBook-Lite-v1.0.0.apk
-            LedgerBook-Lite-v1.0.0.sha256
+            LedgerBook-Lite-v1.1.0-Cartoon.apk
+            LedgerBook-Lite-v1.1.0-Cartoon.sha256
           if-no-files-found: error
           retention-days: 30
