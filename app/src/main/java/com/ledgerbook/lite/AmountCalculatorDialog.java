@@ -24,7 +24,7 @@ public final class AmountCalculatorDialog {
     }
 
     public static void show(Activity activity, String title, long initialCents, Listener listener) {
-        show(activity, title, initialCents, false, listener);
+        show(activity, title, initialCents, title != null && title.contains("优惠"), listener);
     }
 
     public static void show(Activity activity, String title, long initialCents,
