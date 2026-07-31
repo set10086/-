@@ -53,7 +53,7 @@ public final class CalendarPageView extends LinearLayout {
         setOrientation(VERTICAL);
         setBackgroundColor(CartoonStyle.BACKGROUND);
         setPadding(V13Ui.dp(activity, 12), V13Ui.dp(activity, 10),
-                V13Ui.dp(activity, 12), V13Ui.dp(activity, 90));
+                V13Ui.dp(activity, 12), 0);
 
         LinearLayout controls = new LinearLayout(activity);
         controls.setGravity(Gravity.CENTER_VERTICAL);
@@ -68,7 +68,7 @@ public final class CalendarPageView extends LinearLayout {
         controls.addView(today, new LayoutParams(V13Ui.dp(activity, 62), V13Ui.dp(activity, 44)));
         controls.addView(next, new LayoutParams(V13Ui.dp(activity, 48), V13Ui.dp(activity, 44)));
         addView(controls);
-        addView(V13Ui.gap(activity, 10));
+        addView(V13Ui.gap(activity, 8));
 
         String[] week = {"一", "二", "三", "四", "五", "六", "日"};
         GridLayout weekHeader = new GridLayout(activity);
@@ -76,19 +76,20 @@ public final class CalendarPageView extends LinearLayout {
         for (String label : week) {
             TextView view = V13Ui.text(activity, label, 12, CartoonStyle.MUTED, true);
             view.setGravity(Gravity.CENTER);
-            weekHeader.addView(view, cellParams(weekHeader, V13Ui.dp(activity, 28)));
+            weekHeader.addView(view, cellParams(weekHeader, V13Ui.dp(activity, 26)));
         }
-        addView(weekHeader, new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, V13Ui.dp(activity, 28)));
+        addView(weekHeader, new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, V13Ui.dp(activity, 26)));
 
         grid = new GridLayout(activity);
         grid.setColumnCount(7);
         grid.setRowCount(6);
-        addView(grid, new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, V13Ui.dp(activity, 366)));
-        addView(V13Ui.gap(activity, 12));
+        addView(grid, new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, V13Ui.dp(activity, 312)));
+        addView(V13Ui.gap(activity, 8));
 
         ScrollView dayScroll = new ScrollView(activity);
         dayList = new LinearLayout(activity);
         dayList.setOrientation(VERTICAL);
+        dayList.setPadding(0, 0, 0, V13Ui.dp(activity, 90));
         dayScroll.addView(dayList, new ScrollView.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         addView(dayScroll, new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
@@ -149,14 +150,14 @@ public final class CalendarPageView extends LinearLayout {
             }
             if (summary != null && summary.incomeCents > 0L) label.append(" 🟢");
             if (summary != null && summary.hasTransfer) label.append(" 🔵");
-            TextView cell = V13Ui.text(activity, label.toString(), 11,
+            TextView cell = V13Ui.text(activity, label.toString(), 10,
                     YearMonth.from(date).equals(month) ? CartoonStyle.INK : 0xFFB3AAA0, true);
             cell.setGravity(Gravity.CENTER);
-            cell.setLineSpacing(0f, 1.05f);
+            cell.setLineSpacing(0f, 1.0f);
             int fill = date.equals(selectedDate) ? CartoonStyle.SOFT_PEACH : Color.TRANSPARENT;
             int stroke = date.equals(today) ? CartoonStyle.OUTLINE : 0x00FFFFFF;
             int strokeDp = date.equals(today) ? 1 : 0;
-            cell.setBackground(V13Ui.panel(activity, fill, stroke, strokeDp, 14));
+            cell.setBackground(V13Ui.panel(activity, fill, stroke, strokeDp, 13));
             if (summary != null && summary.incomeCents > 0L) {
                 cell.setContentDescription(date + "，支出" + summary.expenseCents + "分，有收入");
             } else {
@@ -167,7 +168,7 @@ public final class CalendarPageView extends LinearLayout {
                 if (!YearMonth.from(date).equals(month)) month = YearMonth.from(date);
                 refresh();
             });
-            grid.addView(cell, cellParams(grid, V13Ui.dp(activity, 61)));
+            grid.addView(cell, cellParams(grid, V13Ui.dp(activity, 52)));
         }
     }
 
@@ -184,17 +185,17 @@ public final class CalendarPageView extends LinearLayout {
         TextView heading = V13Ui.text(activity,
                 selectedDate.format(dayFormatter) + "\n收入 " + V13Ui.money(currentCurrency(), income)
                         + " · 支出 " + V13Ui.money(currentCurrency(), expense),
-                16, CartoonStyle.INK, true);
+                15, CartoonStyle.INK, true);
         heading.setPadding(V13Ui.dp(activity, 4), V13Ui.dp(activity, 4),
-                V13Ui.dp(activity, 4), V13Ui.dp(activity, 10));
+                V13Ui.dp(activity, 4), V13Ui.dp(activity, 8));
         dayList.addView(heading);
         if (rows.isEmpty()) {
-            TextView empty = V13Ui.text(activity, "🖍️\n这天还没有记录", 16, CartoonStyle.MUTED, true);
+            TextView empty = V13Ui.text(activity, "🖍️  这天还没有记录", 15, CartoonStyle.MUTED, true);
             empty.setGravity(Gravity.CENTER);
-            dayList.addView(empty, new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, V13Ui.dp(activity, 112)));
+            dayList.addView(empty, new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, V13Ui.dp(activity, 62)));
             TextView add = V13Ui.button(activity, "＋ 记一笔", CartoonStyle.CREAM_YELLOW);
             add.setOnClickListener(v -> quickAdd());
-            dayList.addView(add, new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, V13Ui.dp(activity, 48)));
+            dayList.addView(add, new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, V13Ui.dp(activity, 46)));
             return;
         }
         for (LedgerDb.TxnView txn : rows) {
@@ -243,8 +244,8 @@ public final class CalendarPageView extends LinearLayout {
         params.width = 0;
         params.height = height;
         params.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f);
-        params.setMargins(V13Ui.dp(activity, 2), V13Ui.dp(activity, 2),
-                V13Ui.dp(activity, 2), V13Ui.dp(activity, 2));
+        params.setMargins(V13Ui.dp(activity, 2), V13Ui.dp(activity, 1),
+                V13Ui.dp(activity, 2), V13Ui.dp(activity, 1));
         return params;
     }
 
