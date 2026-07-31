@@ -62,8 +62,15 @@ public final class BillDrawerView extends LinearLayout {
         this.listener = listener;
         setOrientation(VERTICAL);
         setBackgroundColor(CartoonStyle.BACKGROUND);
-        setPadding(V13Ui.dp(activity, 12), V13Ui.dp(activity, 14),
-                V13Ui.dp(activity, 12), V13Ui.dp(activity, 14));
+        int side = V13Ui.dp(activity, 12);
+        int top = V13Ui.dp(activity, 14);
+        int bottom = V13Ui.dp(activity, 14);
+        setPadding(side, top, side, bottom);
+        setOnApplyWindowInsetsListener((view, insets) -> {
+            setPadding(side, top + insets.getSystemWindowInsetTop(), side,
+                    bottom + insets.getSystemWindowInsetBottom());
+            return insets;
+        });
 
         LinearLayout header = new LinearLayout(activity);
         header.setGravity(Gravity.CENTER_VERTICAL);
@@ -153,10 +160,15 @@ public final class BillDrawerView extends LinearLayout {
             String day = V13Ui.day(txn.occurredAt);
             if (!day.equals(shownDay)) {
                 shownDay = day;
-                long[] values = totals.get(day);
-                TextView group = V13Ui.text(activity,
-                        day + "   收入 " + V13Ui.money(txn.currency, values[0])
-                                + " · 支出 " + V13Ui.money(txn.currency, values[1]),
+                String groupText;
+                if (crossLedger) {
+                    groupText = day + " · 跨账本（金额按各账本币种显示）";
+                } else {
+                    long[] values = totals.get(day);
+                    groupText = day + "   收入 " + V13Ui.money(txn.currency, values[0])
+                            + " · 支出 " + V13Ui.money(txn.currency, values[1]);
+                }
+                TextView group = V13Ui.text(activity, groupText,
                         13, CartoonStyle.MUTED, true);
                 group.setPadding(V13Ui.dp(activity, 4), V13Ui.dp(activity, 10),
                         V13Ui.dp(activity, 4), V13Ui.dp(activity, 6));
@@ -281,7 +293,11 @@ public final class BillDrawerView extends LinearLayout {
         List<LedgerDb.Account> accounts = db.getAccountsForScope(resolvedLedgerId());
         List<String> accountLabels = new ArrayList<>();
         accountLabels.add("全部账户");
-        for (LedgerDb.Account account : accounts) accountLabels.add(account.name);
+        for (LedgerDb.Account account : accounts) {
+            String ledgerPrefix = resolvedLedgerId() == TransactionFilter.ALL_LEDGERS
+                    ? ledgerName(account.ledgerId) + " · " : "";
+            accountLabels.add(ledgerPrefix + account.name);
+        }
         accountSpinner.setAdapter(new ArrayAdapter<>(activity,
                 android.R.layout.simple_spinner_dropdown_item, accountLabels));
         int accountPosition = 0;
@@ -386,7 +402,10 @@ public final class BillDrawerView extends LinearLayout {
         else {
             LedgerDb.Ledger ledger = db.getLedger(ledgerScope);
             ledgerButton.setText(ledger == null ? "当前账本" : ledger.name);
-            if (ledger == null) ledgerScope = CURRENT_LEDGER;
+            if (ledger == null) {
+                ledgerScope = CURRENT_LEDGER;
+                accountId = 0L;
+            }
         }
         detailButton.setText(type != null || category != null || accountId > 0L || bookkeeper != null
                 ? "筛选 ●" : "筛选");
@@ -415,6 +434,11 @@ public final class BillDrawerView extends LinearLayout {
                         Toast.makeText(activity, error.getMessage(), Toast.LENGTH_SHORT).show();
                     }
                 }).show();
+    }
+
+    private String ledgerName(long id) {
+        LedgerDb.Ledger ledger = db.getLedger(id);
+        return ledger == null ? "账本" : ledger.name;
     }
 
     private void showError(String message) {
