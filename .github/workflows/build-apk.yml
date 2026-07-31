@@ -42,8 +42,42 @@ jobs:
         with:
           gradle-version: '8.7'
 
-      - name: Prepare stable signing key
+      - name: Prepare source and stable signing key
         run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('app/src/main/java/com/ledgerbook/lite/LedgerV12Activity.java')
+          text = path.read_text()
+          old = '''        LedgerDb.Account[] target = {firstDifferent(accounts, source[0].id)};
+          long[] occurredAt = {System.currentTimeMillis()};'''
+          new = '''        LedgerDb.Account[] target = {firstDifferent(accounts, source[0].id)};
+          TextView[] targetViewRef = {null};
+          long[] occurredAt = {System.currentTimeMillis()};'''
+          if old not in text:
+              raise SystemExit('target state insertion point not found')
+          text = text.replace(old, new, 1)
+          old = '''                    if (target[0] != null && target[0].id == account.id) {
+                        target[0] = firstDifferent(accounts, account.id);
+                    }'''
+          new = '''                    if (target[0] != null && target[0].id == account.id) {
+                        target[0] = firstDifferent(accounts, account.id);
+                        if (targetViewRef[0] != null) {
+                            targetViewRef[0].setText(target[0] == null
+                                    ? "请先创建另一个账户" : accountLabel(target[0]));
+                        }
+                    }'''
+          if old not in text:
+              raise SystemExit('target refresh block not found')
+          text = text.replace(old, new, 1)
+          old = '''        TextView targetView = selectField(target[0] == null ? "请先创建另一个账户" : accountLabel(target[0]),
+                  "转入账户必须不同");'''
+          new = '''        TextView targetView = selectField(target[0] == null ? "请先创建另一个账户" : accountLabel(target[0]),
+                  "转入账户必须不同");
+          targetViewRef[0] = targetView;'''
+          if old not in text:
+              raise SystemExit('target view assignment point not found')
+          path.write_text(text.replace(old, new, 1))
+          PY
           base64 --decode signing/ledgerbook-lite.jks.b64 > signing/ledgerbook-lite.jks
           keytool -list -keystore signing/ledgerbook-lite.jks -storepass ledgerbook123 -alias ledgerbook >/dev/null
 
