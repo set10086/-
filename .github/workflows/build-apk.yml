@@ -6,6 +6,7 @@ on:
       - ledgerbook-lite-apk
       - ledgerbook-lite-v1.1-cartoon
       - ledgerbook-lite-v1.2-inputs
+      - ledgerbook-lite-v1.3-navigation
   pull_request:
     branches:
       - main
@@ -42,38 +43,8 @@ jobs:
         with:
           gradle-version: '8.7'
 
-      - name: Prepare source and stable signing key
+      - name: Prepare stable signing key
         run: |
-          python3 - <<'PY'
-          from pathlib import Path
-
-          path = Path('app/src/main/java/com/ledgerbook/lite/LedgerV12Activity.java')
-          text = path.read_text()
-
-          def replace_once(needle, replacement, label):
-              global text
-              count = text.count(needle)
-              if count != 1:
-                  raise SystemExit(f'{label}: expected one match, found {count}')
-              text = text.replace(needle, replacement, 1)
-
-          replace_once(
-              "        LedgerDb.Account[] target = {firstDifferent(accounts, source[0].id)};\n",
-              "        LedgerDb.Account[] target = {firstDifferent(accounts, source[0].id)};\n        TextView[] targetViewRef = {null};\n",
-              'target state insertion'
-          )
-          replace_once(
-              "                    if (target[0] != null && target[0].id == account.id) {\n                        target[0] = firstDifferent(accounts, account.id);\n                    }",
-              "                    if (target[0] != null && target[0].id == account.id) {\n                        target[0] = firstDifferent(accounts, account.id);\n                        if (targetViewRef[0] != null) {\n                            targetViewRef[0].setText(target[0] == null\n                                    ? \"请先创建另一个账户\" : accountLabel(target[0]));\n                        }\n                    }",
-              'target refresh block'
-          )
-          replace_once(
-              "        form.addView(targetLabel);\n        form.addView(targetView);",
-              "        targetViewRef[0] = targetView;\n        form.addView(targetLabel);\n        form.addView(targetView);",
-              'target view assignment'
-          )
-          path.write_text(text)
-          PY
           base64 --decode signing/ledgerbook-lite.jks.b64 > signing/ledgerbook-lite.jks
           keytool -list -keystore signing/ledgerbook-lite.jks -storepass ledgerbook123 -alias ledgerbook >/dev/null
 
@@ -87,17 +58,20 @@ jobs:
         run: |
           "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose --print-certs app/build/outputs/apk/debug/app-debug.apk
 
+      - name: Verify APK archive
+        run: unzip -t app/build/outputs/apk/debug/app-debug.apk
+
       - name: Prepare artifact
         run: |
-          cp app/build/outputs/apk/debug/app-debug.apk LedgerBook-Lite-v1.2.0.apk
-          sha256sum LedgerBook-Lite-v1.2.0.apk > LedgerBook-Lite-v1.2.0.sha256
+          cp app/build/outputs/apk/debug/app-debug.apk LedgerBook-Lite-v1.3.0.apk
+          sha256sum LedgerBook-Lite-v1.3.0.apk > LedgerBook-Lite-v1.3.0.sha256
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: LedgerBook-Lite-V1.2-APK
+          name: LedgerBook-Lite-V1.3-APK
           path: |
-            LedgerBook-Lite-v1.2.0.apk
-            LedgerBook-Lite-v1.2.0.sha256
+            LedgerBook-Lite-v1.3.0.apk
+            LedgerBook-Lite-v1.3.0.sha256
           if-no-files-found: error
           retention-days: 30
