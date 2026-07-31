@@ -37,8 +37,15 @@ public final class LedgerDrawerView extends LinearLayout {
         this.listener = listener;
         setOrientation(VERTICAL);
         setBackgroundColor(CartoonStyle.BACKGROUND);
-        setPadding(V13Ui.dp(activity, 14), V13Ui.dp(activity, 14),
-                V13Ui.dp(activity, 14), V13Ui.dp(activity, 14));
+        int side = V13Ui.dp(activity, 14);
+        int top = V13Ui.dp(activity, 14);
+        int bottom = V13Ui.dp(activity, 14);
+        setPadding(side, top, side, bottom);
+        setOnApplyWindowInsetsListener((view, insets) -> {
+            setPadding(side, top + insets.getSystemWindowInsetTop(), side,
+                    bottom + insets.getSystemWindowInsetBottom());
+            return insets;
+        });
 
         LinearLayout header = new LinearLayout(activity);
         header.setGravity(Gravity.CENTER_VERTICAL);
