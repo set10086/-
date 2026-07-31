@@ -3,6 +3,7 @@ package com.ledgerbook.lite;
 import android.content.Context;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
+import android.text.TextUtils;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
@@ -36,7 +37,14 @@ final class V13Ui {
     static TextView button(Context context, String value, int fill) {
         TextView view = text(context, value, 15, CartoonStyle.INK, true);
         view.setGravity(Gravity.CENTER);
-        view.setPadding(dp(context, 12), dp(context, 9), dp(context, 12), dp(context, 9));
+        if (value != null && value.startsWith("📒")) {
+            view.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
+            view.setSingleLine(true);
+            view.setEllipsize(TextUtils.TruncateAt.END);
+            view.setPadding(dp(context, 10), dp(context, 9), dp(context, 62), dp(context, 9));
+        } else {
+            view.setPadding(dp(context, 12), dp(context, 9), dp(context, 12), dp(context, 9));
+        }
         view.setBackground(panel(context, fill, 0xFFE4D5C2, 1, 18));
         view.setClickable(true);
         view.setFocusable(true);
