@@ -24,6 +24,11 @@ public final class AmountCalculatorDialog {
     }
 
     public static void show(Activity activity, String title, long initialCents, Listener listener) {
+        show(activity, title, initialCents, false, listener);
+    }
+
+    public static void show(Activity activity, String title, long initialCents,
+                            boolean allowZero, Listener listener) {
         StringBuilder expression = new StringBuilder(initialCents > 0
                 ? BigDecimal.valueOf(initialCents, 2).stripTrailingZeros().toPlainString() : "");
 
@@ -34,11 +39,11 @@ public final class AmountCalculatorDialog {
         TextView expressionView = text(activity, expression.length() == 0 ? "0" : expression.toString(), 27, true);
         expressionView.setGravity(Gravity.END);
         expressionView.setPadding(dp(activity, 12), dp(activity, 14), dp(activity, 12), dp(activity, 4));
-        expressionView.setBackground(panel(CartoonStyle.SURFACE, 18));
+        expressionView.setBackground(panel(activity, CartoonStyle.SURFACE, 18));
         root.addView(expressionView, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, dp(activity, 66)));
 
-        TextView resultView = text(activity, "= 0.00", 17, true);
+        TextView resultView = text(activity, allowZero ? "= 0.00" : "= --", 17, true);
         resultView.setTextColor(CartoonStyle.INCOME);
         resultView.setGravity(Gravity.END);
         resultView.setPadding(0, dp(activity, 8), dp(activity, 6), dp(activity, 10));
@@ -66,19 +71,19 @@ public final class AmountCalculatorDialog {
                 button.setTextColor(CartoonStyle.INK);
                 button.setAllCaps(false);
                 int fill = isOperator(key) ? CartoonStyle.SOFT_PEACH : CartoonStyle.SOFT_YELLOW;
-                button.setBackground(panel(fill, 17));
+                button.setBackground(panel(activity, fill, 17));
                 LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0, dp(activity, 54), 1f);
                 params.setMargins(dp(activity, 4), dp(activity, 4), dp(activity, 4), dp(activity, 4));
                 row.addView(button, params);
                 button.setOnClickListener(v -> {
                     applyKey(expression, key);
                     expressionView.setText(expression.length() == 0 ? "0" : expression.toString());
-                    updatePreview(expression, resultView);
+                    updatePreview(expression, resultView, allowZero);
                 });
             }
             root.addView(row);
         }
-        updatePreview(expression, resultView);
+        updatePreview(expression, resultView, allowZero);
 
         AlertDialog dialog = new AlertDialog.Builder(activity)
                 .setTitle(title)
@@ -88,9 +93,14 @@ public final class AmountCalculatorDialog {
                 .create();
         dialog.setOnShowListener(ignored -> dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
             try {
+                if (allowZero && expression.length() == 0) {
+                    listener.onAmount(0L);
+                    dialog.dismiss();
+                    return;
+                }
                 BigDecimal value = AmountExpression.evaluate(expression.toString());
-                if (value.compareTo(BigDecimal.ZERO) <= 0) {
-                    throw new IllegalArgumentException("金额必须大于零");
+                if (value.compareTo(BigDecimal.ZERO) < 0 || (!allowZero && value.compareTo(BigDecimal.ZERO) == 0)) {
+                    throw new IllegalArgumentException(allowZero ? "金额不能为负数" : "金额必须大于零");
                 }
                 long cents = value.movePointRight(2).longValueExact();
                 listener.onAmount(cents);
@@ -135,8 +145,12 @@ public final class AmountCalculatorDialog {
         expression.append(key);
     }
 
-    private static void updatePreview(StringBuilder expression, TextView view) {
-        if (expression.length() == 0 || isOperator(String.valueOf(expression.charAt(expression.length() - 1)))) {
+    private static void updatePreview(StringBuilder expression, TextView view, boolean allowZero) {
+        if (expression.length() == 0) {
+            view.setText(allowZero ? "= 0.00" : "= --");
+            return;
+        }
+        if (isOperator(String.valueOf(expression.charAt(expression.length() - 1)))) {
             view.setText("= --");
             return;
         }
@@ -161,11 +175,11 @@ public final class AmountCalculatorDialog {
         return view;
     }
 
-    private static GradientDrawable panel(int color, int radiusDp) {
+    private static GradientDrawable panel(Activity activity, int color, int radiusDp) {
         GradientDrawable drawable = new GradientDrawable();
         drawable.setColor(color);
-        drawable.setCornerRadius(radiusDp * 3f);
-        drawable.setStroke(1, 0xFFE6D3BB);
+        drawable.setCornerRadius(dp(activity, radiusDp));
+        drawable.setStroke(dp(activity, 1), 0xFFE6D3BB);
         return drawable;
     }
 
