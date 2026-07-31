@@ -8,7 +8,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".LedgerV12Activity"
+            android:name=".LedgerV13Activity"
             android:screenOrientation="unspecified"
             android:exported="true">
             <intent-filter>
