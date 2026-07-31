@@ -5,6 +5,7 @@ on:
     branches:
       - ledgerbook-lite-apk
       - ledgerbook-lite-v1.1-cartoon
+      - ledgerbook-lite-v1.2-inputs
   pull_request:
     branches:
       - main
@@ -41,9 +42,8 @@ jobs:
         with:
           gradle-version: '8.7'
 
-      - name: Prepare V1.1 source and signing key
+      - name: Prepare stable signing key
         run: |
-          sed -i '/dialog.setOnShowListener(dialog.getOnShowListener());/d' app/src/main/java/com/ledgerbook/lite/CartoonActivity.java
           base64 --decode signing/ledgerbook-lite.jks.b64 > signing/ledgerbook-lite.jks
           keytool -list -keystore signing/ledgerbook-lite.jks -storepass ledgerbook123 -alias ledgerbook >/dev/null
 
@@ -59,15 +59,15 @@ jobs:
 
       - name: Prepare artifact
         run: |
-          cp app/build/outputs/apk/debug/app-debug.apk LedgerBook-Lite-v1.1.0-Cartoon.apk
-          sha256sum LedgerBook-Lite-v1.1.0-Cartoon.apk > LedgerBook-Lite-v1.1.0-Cartoon.sha256
+          cp app/build/outputs/apk/debug/app-debug.apk LedgerBook-Lite-v1.2.0.apk
+          sha256sum LedgerBook-Lite-v1.2.0.apk > LedgerBook-Lite-v1.2.0.sha256
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: LedgerBook-Lite-V1.1-Cartoon-APK
+          name: LedgerBook-Lite-V1.2-APK
           path: |
-            LedgerBook-Lite-v1.1.0-Cartoon.apk
-            LedgerBook-Lite-v1.1.0-Cartoon.sha256
+            LedgerBook-Lite-v1.2.0.apk
+            LedgerBook-Lite-v1.2.0.sha256
           if-no-files-found: error
           retention-days: 30
