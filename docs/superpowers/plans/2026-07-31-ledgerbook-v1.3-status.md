@@ -19,3 +19,5 @@ Implemented scope:
 - Selected-day transaction list.
 - Global quick-entry floating button.
 - V1.2 database and signing compatibility retained.
+
+Release artifact: `LedgerBook-Lite-v1.3.0.apk`.
