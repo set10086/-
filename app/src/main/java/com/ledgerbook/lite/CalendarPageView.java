@@ -13,7 +13,6 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -148,8 +147,8 @@ public final class CalendarPageView extends LinearLayout {
             } else {
                 label.append("\n ");
             }
-            if (summary != null && summary.incomeCents > 0L) label.append("  ●");
-            if (summary != null && summary.hasTransfer) label.append("  •");
+            if (summary != null && summary.incomeCents > 0L) label.append(" 🟢");
+            if (summary != null && summary.hasTransfer) label.append(" 🔵");
             TextView cell = V13Ui.text(activity, label.toString(), 11,
                     YearMonth.from(date).equals(month) ? CartoonStyle.INK : 0xFFB3AAA0, true);
             cell.setGravity(Gravity.CENTER);
