@@ -1,0 +1,59 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.ledgerbook.lite'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'com.ledgerbook.lite'
+        minSdk 26
+        targetSdk 35
+        versionCode 5
+        versionName '1.4.0'
+    }
+
+    signingConfigs {
+        stableSideload {
+            storeFile file('../signing/ledgerbook-lite.jks')
+            storePassword 'ledgerbook123'
+            keyAlias 'ledgerbook'
+            keyPassword 'ledgerbook123'
+        }
+    }
+
+    buildTypes {
+        debug {
+            signingConfig signingConfigs.stableSideload
+        }
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.stableSideload
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+def generatedV14Activity = file('src/main/java/com/ledgerbook/lite/LedgerV14Activity.java')
+
+tasks.register('prepareV14', Exec) {
+    workingDir rootProject.projectDir
+    commandLine 'python3', 'scripts/prepare_v14.py'
+    inputs.file file('src/main/java/com/ledgerbook/lite/LedgerV13Activity.java')
+    inputs.file rootProject.file('scripts/prepare_v14.py')
+    outputs.file generatedV14Activity
+}
+
+tasks.named('preBuild').configure {
+    dependsOn tasks.named('prepareV14')
+}
+
+dependencies {
+    testImplementation 'junit:junit:4.13.2'
+}
