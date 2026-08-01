@@ -28,30 +28,21 @@ public final class CartoonStyle {
     public static final int BUTTON_RADIUS_DP = 18;
 
     public static int transactionColor(String type) {
-        if (LedgerDb.TYPE_EXPENSE.equals(type)) {
-            return EXPENSE;
-        }
-        if (LedgerDb.TYPE_INCOME.equals(type)) {
-            return INCOME;
-        }
+        if (LedgerDb.TYPE_EXPENSE.equals(type)) return EXPENSE;
+        if (LedgerDb.TYPE_INCOME.equals(type)) return INCOME;
         return TRANSFER;
     }
 
     public static int transactionTint(String type) {
-        if (LedgerDb.TYPE_EXPENSE.equals(type)) {
-            return SOFT_PEACH;
-        }
-        if (LedgerDb.TYPE_INCOME.equals(type)) {
-            return SOFT_GREEN;
-        }
+        if (LedgerDb.TYPE_EXPENSE.equals(type)) return SOFT_PEACH;
+        if (LedgerDb.TYPE_INCOME.equals(type)) return SOFT_GREEN;
         return SOFT_SKY;
     }
 
     public static String transactionIcon(String type, String category) {
         String value = category == null ? "" : category;
-        if (LedgerDb.TYPE_TRANSFER.equals(type)) {
-            return "↔";
-        }
+        if (value.contains("/")) return InputCatalog.iconFor(type, value);
+        if (LedgerDb.TYPE_TRANSFER.equals(type)) return "↔";
         if (LedgerDb.TYPE_INCOME.equals(type)) {
             if (value.contains("工资")) return "💰";
             if (value.contains("奖金") || value.contains("红包")) return "🎁";
