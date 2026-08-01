@@ -2,6 +2,7 @@ package com.ledgerbook.lite;
 
 import android.content.Context;
 import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.text.TextUtils;
 import android.util.TypedValue;
@@ -101,9 +102,13 @@ final class V13Ui {
         String prefix = LedgerDb.TYPE_EXPENSE.equals(txn.type) ? "−"
                 : LedgerDb.TYPE_INCOME.equals(txn.type) ? "+" : "";
         TextView row = text(context,
-                CartoonStyle.transactionIcon(txn.type, txn.category) + "  " + txn.category +
-                        "\n" + meta + "\n" + prefix + money(txn.currency, txn.amountCents),
+                txn.category + "\n" + meta + "\n" + prefix + money(txn.currency, txn.amountCents),
                 14, CartoonStyle.INK, true);
+        Drawable icon = CrayonIconView.drawable(txn.type, txn.category);
+        int iconSize = dp(context, 48);
+        icon.setBounds(0, 0, iconSize, iconSize);
+        row.setCompoundDrawables(icon, null, null, null);
+        row.setCompoundDrawablePadding(dp(context, 10));
         row.setLineSpacing(0f, 1.14f);
         row.setPadding(dp(context, 12), dp(context, 10), dp(context, 12), dp(context, 10));
         row.setBackground(panel(context, CartoonStyle.SURFACE, 0xFFE5D7C3, 1, 17));
