@@ -73,8 +73,7 @@ public final class SettingsPageView extends ScrollView {
 
     private void addAppearanceCard() {
         LinearLayout card = card("🖍️  外观与图标", CartoonStyle.SOFT_YELLOW,
-                "采用原创 Canvas 蜡笔图标，分类含义和分组参考你提供的软件截图。">
-                replace(">", ""));
+                "采用原创 Canvas 蜡笔图标，分类含义和分组参考你提供的软件截图。");
         TextView theme = choiceRow("主题风格", "蜡笔家庭手账");
         theme.setOnClickListener(v -> new AlertDialog.Builder(activity)
                 .setTitle("蜡笔家庭手账")
@@ -91,8 +90,7 @@ public final class SettingsPageView extends ScrollView {
 
     private void addDefaultsCard() {
         LinearLayout card = card("📌  记账默认值", CartoonStyle.SOFT_PEACH,
-                "这些选项会直接影响下次打开软件和新建账单。">
-                replace(">", ""));
+                "这些选项会直接影响下次打开软件和新建账单。");
 
         List<LedgerDb.Ledger> ledgers = db.getLedgers();
         List<String> ledgerLabels = new ArrayList<>();
@@ -152,8 +150,7 @@ public final class SettingsPageView extends ScrollView {
 
     private void addBehaviorCard() {
         LinearLayout card = card("✨  使用习惯", CartoonStyle.SOFT_LAVENDER,
-                "启动页面、侧栏反馈和保存后的页面去向。">
-                replace(">", ""));
+                "启动页面、侧栏反馈和保存后的页面去向。");
 
         String[] pages = {"首页", "日历", "账户", "统计", "设置"};
         int pageIndex = Math.max(0, Math.min(pages.length - 1, settings.startupPage()));
@@ -184,8 +181,7 @@ public final class SettingsPageView extends ScrollView {
 
     private void addManagementCard() {
         LinearLayout card = card("🧰  管理入口", CartoonStyle.SOFT_SKY,
-                "点击整行进入对应管理功能。">
-                replace(">", ""));
+                "点击整行进入对应管理功能。");
 
         TextView ledgers = choiceRow("账本管理", "新增、切换和整理账本");
         ledgers.setOnClickListener(v -> {
@@ -203,8 +199,7 @@ public final class SettingsPageView extends ScrollView {
 
     private void addAboutCard() {
         LinearLayout card = card("ℹ️  关于", CartoonStyle.SURFACE,
-                "LedgerBook Lite 1.4.1\n数据保存在当前手机的本地 SQLite 数据库。">
-                replace(">", ""));
+                "LedgerBook Lite 1.4.1\n数据保存在当前手机的本地 SQLite 数据库。");
         TextView diagnostic = choiceRow("设置交互自检", "点击后应立即弹出确认窗口");
         diagnostic.setOnClickListener(v -> new AlertDialog.Builder(activity)
                 .setTitle("设置交互正常")
