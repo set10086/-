@@ -40,7 +40,7 @@ public final class CategoryPickerDialog {
         root.setPadding(dp(activity, 12), dp(activity, 8), dp(activity, 12), dp(activity, 8));
 
         EditText search = new EditText(activity);
-        search.setHint("🔍 搜索具体分类");
+        search.setHint("搜索具体分类");
         search.setSingleLine(true);
         search.setTextColor(CartoonStyle.INK);
         search.setHintTextColor(CartoonStyle.MUTED);
@@ -60,7 +60,7 @@ public final class CategoryPickerDialog {
         groupScroll.addView(groupList, new ScrollView.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         body.addView(groupScroll, new LinearLayout.LayoutParams(
-                dp(activity, 96), dp(activity, 420)));
+                dp(activity, 102), dp(activity, 430)));
         body.addView(horizontalSpace(activity, 8));
 
         ScrollView optionScroll = new ScrollView(activity);
@@ -70,11 +70,11 @@ public final class CategoryPickerDialog {
         optionScroll.addView(optionGrid, new ScrollView.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         body.addView(optionScroll, new LinearLayout.LayoutParams(
-                0, dp(activity, 420), 1f));
+                0, dp(activity, 430), 1f));
         root.addView(body);
         root.addView(space(activity, 8));
 
-        TextView customButton = button(activity, "✏️  自定义分类", CartoonStyle.SOFT_PEACH, 15);
+        TextView customButton = button(activity, "自定义分类", CartoonStyle.SOFT_PEACH, 15);
         root.addView(customButton, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, dp(activity, 48)));
 
@@ -91,7 +91,8 @@ public final class CategoryPickerDialog {
         java.util.function.Consumer<List<InputCatalog.Option>> renderOptions = options -> {
             optionGrid.removeAllViews();
             if (options.isEmpty()) {
-                TextView empty = text(activity, "没有找到相关分类", 14, CartoonStyle.MUTED, true);
+                TextView empty = text(activity, "没有找到相关分类", 14,
+                        CartoonStyle.MUTED, true);
                 empty.setGravity(Gravity.CENTER);
                 GridLayout.LayoutParams emptyParams = new GridLayout.LayoutParams();
                 emptyParams.width = GridLayout.LayoutParams.MATCH_PARENT;
@@ -106,17 +107,11 @@ public final class CategoryPickerDialog {
             int index = 0;
             for (InputCatalog.Option option : options) {
                 if (option.custom) continue;
-                TextView item = text(activity, option.icon + "\n" + option.name,
-                        12, CartoonStyle.INK, true);
-                item.setGravity(Gravity.CENTER);
-                item.setLineSpacing(0f, 1.05f);
-                item.setPadding(dp(activity, 3), dp(activity, 8),
-                        dp(activity, 3), dp(activity, 8));
-                item.setBackground(panel(activity, fills[index % fills.length], 16));
-                item.setContentDescription(option.group + "，" + option.name);
+                LinearLayout item = optionItem(activity, transactionType, option,
+                        fills[index % fills.length]);
                 GridLayout.LayoutParams params = new GridLayout.LayoutParams();
                 params.width = 0;
-                params.height = dp(activity, 78);
+                params.height = dp(activity, 92);
                 params.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f);
                 params.setMargins(dp(activity, 3), dp(activity, 3),
                         dp(activity, 3), dp(activity, 3));
@@ -133,15 +128,10 @@ public final class CategoryPickerDialog {
             groupList.removeAllViews();
             for (InputCatalog.Group group : groups) {
                 boolean active = group == selected[0];
-                TextView item = text(activity, group.icon + "\n" + group.label,
-                        12, CartoonStyle.INK, true);
-                item.setGravity(Gravity.CENTER);
-                item.setPadding(dp(activity, 4), dp(activity, 9),
-                        dp(activity, 4), dp(activity, 9));
-                item.setBackground(panel(activity,
-                        active ? CartoonStyle.CREAM_YELLOW : CartoonStyle.SURFACE, 15));
+                LinearLayout item = groupItem(activity, transactionType, group,
+                        active ? CartoonStyle.CREAM_YELLOW : CartoonStyle.SURFACE);
                 LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT, dp(activity, 65));
+                        ViewGroup.LayoutParams.MATCH_PARENT, dp(activity, 76));
                 params.setMargins(0, 0, 0, dp(activity, 5));
                 groupList.addView(item, params);
                 item.setOnClickListener(v -> {
@@ -158,11 +148,8 @@ public final class CategoryPickerDialog {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
             @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
                 String query = s == null ? "" : s.toString().trim();
-                if (query.isEmpty()) {
-                    renderOptions.accept(selected[0].options);
-                } else {
-                    renderOptions.accept(InputCatalog.search(transactionType, query));
-                }
+                renderOptions.accept(query.isEmpty()
+                        ? selected[0].options : InputCatalog.search(transactionType, query));
                 optionScroll.smoothScrollTo(0, 0);
             }
             @Override public void afterTextChanged(Editable s) { }
@@ -175,6 +162,52 @@ public final class CategoryPickerDialog {
         renderGroups[0].run();
         renderOptions.accept(selected[0].options);
         dialog.show();
+    }
+
+    private static LinearLayout optionItem(Activity activity, String transactionType,
+                                           InputCatalog.Option option, int fill) {
+        LinearLayout item = new LinearLayout(activity);
+        item.setOrientation(LinearLayout.VERTICAL);
+        item.setGravity(Gravity.CENTER);
+        item.setPadding(dp(activity, 3), dp(activity, 5), dp(activity, 3), dp(activity, 5));
+        item.setBackground(panel(activity, fill, 16));
+        item.setClickable(true);
+        item.setFocusable(true);
+        item.setContentDescription(option.group + "，" + option.name + "，点击选择");
+
+        CrayonIconView icon = new CrayonIconView(activity);
+        icon.setCategory(transactionType, option.label);
+        item.addView(icon, new LinearLayout.LayoutParams(dp(activity, 48), dp(activity, 48)));
+
+        TextView label = text(activity, option.name, 12, CartoonStyle.INK, true);
+        label.setGravity(Gravity.CENTER);
+        label.setSingleLine(true);
+        item.addView(label, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
+        return item;
+    }
+
+    private static LinearLayout groupItem(Activity activity, String transactionType,
+                                          InputCatalog.Group group, int fill) {
+        LinearLayout item = new LinearLayout(activity);
+        item.setOrientation(LinearLayout.VERTICAL);
+        item.setGravity(Gravity.CENTER);
+        item.setPadding(dp(activity, 3), dp(activity, 5), dp(activity, 3), dp(activity, 5));
+        item.setBackground(panel(activity, fill, 15));
+        item.setClickable(true);
+        item.setFocusable(true);
+        item.setContentDescription(group.label + "分组，点击查看");
+
+        CrayonIconView icon = new CrayonIconView(activity);
+        icon.setCategory(transactionType, group.label);
+        item.addView(icon, new LinearLayout.LayoutParams(dp(activity, 38), dp(activity, 38)));
+
+        TextView label = text(activity, group.label, 12, CartoonStyle.INK, true);
+        label.setGravity(Gravity.CENTER);
+        label.setSingleLine(true);
+        item.addView(label, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
+        return item;
     }
 
     private static void showCustom(Activity activity, Listener listener, AlertDialog parent) {
@@ -196,7 +229,7 @@ public final class CategoryPickerDialog {
                         Toast.makeText(activity, "请输入分类名称", Toast.LENGTH_SHORT).show();
                         return;
                     }
-                    listener.onCategory("✏️", value);
+                    listener.onCategory("", value);
                     custom.dismiss();
                     parent.dismiss();
                 }));
@@ -207,6 +240,8 @@ public final class CategoryPickerDialog {
         TextView view = text(activity, value, sp, CartoonStyle.INK, true);
         view.setGravity(Gravity.CENTER);
         view.setBackground(panel(activity, fill, 17));
+        view.setClickable(true);
+        view.setFocusable(true);
         return view;
     }
 
