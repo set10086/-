@@ -24,6 +24,8 @@ public final class SettingsInteractionContractTest {
         assertTrue(source.contains("showSingleChoice("));
         assertTrue(source.contains("toggleRow("));
         assertTrue(source.contains("setOnClickListener"));
+        assertTrue(source.contains("setContentDescription"));
+        assertTrue(source.contains("设置交互自检"));
     }
 
     private static Path findFromWorkingDirectory(String relative) {
