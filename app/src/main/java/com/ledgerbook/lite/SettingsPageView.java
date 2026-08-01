@@ -2,19 +2,19 @@ package com.ledgerbook.lite;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.graphics.Typeface;
 import android.view.Gravity;
-import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
-import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.function.IntConsumer;
 
 public final class SettingsPageView extends ScrollView {
     public interface Listener {
@@ -41,11 +41,13 @@ public final class SettingsPageView extends ScrollView {
         this.listener = listener;
         setFillViewport(true);
         setBackgroundColor(CartoonStyle.BACKGROUND);
+        setClickable(true);
+        setFocusable(true);
 
         content = new LinearLayout(activity);
         content.setOrientation(LinearLayout.VERTICAL);
         content.setPadding(V13Ui.dp(activity, 14), V13Ui.dp(activity, 10),
-                V13Ui.dp(activity, 14), V13Ui.dp(activity, 100));
+                V13Ui.dp(activity, 14), V13Ui.dp(activity, 110));
         addView(content, new ScrollView.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         render();
@@ -53,232 +55,265 @@ public final class SettingsPageView extends ScrollView {
 
     private void render() {
         content.removeAllViews();
-        TextView heading = V13Ui.text(activity, "⚙️  设置小屋", 24, CartoonStyle.INK, true);
-        content.addView(heading);
-        TextView subheading = V13Ui.text(activity,
-                "把常用偏好集中收好，记账时少点几步", 13, CartoonStyle.MUTED, false);
-        content.addView(subheading);
+        content.addView(V13Ui.text(activity, "⚙️  设置小屋", 24, CartoonStyle.INK, true));
+        content.addView(V13Ui.text(activity,
+                "整行均可点击，当前值会显示在设置项下方", 13, CartoonStyle.MUTED, false));
         content.addView(V13Ui.gap(activity, 14));
 
-        addThemeCard();
-        content.addView(V13Ui.gap(activity, 10));
-        addDefaultLedgerCard();
-        content.addView(V13Ui.gap(activity, 10));
-        addDefaultAccountCard();
-        content.addView(V13Ui.gap(activity, 10));
-        addBookkeeperCard();
-        content.addView(V13Ui.gap(activity, 10));
+        addAppearanceCard();
+        gap();
+        addDefaultsCard();
+        gap();
         addBehaviorCard();
-        content.addView(V13Ui.gap(activity, 10));
+        gap();
         addManagementCard();
-        content.addView(V13Ui.gap(activity, 10));
+        gap();
         addAboutCard();
     }
 
-    private void addThemeCard() {
-        LinearLayout card = V13Ui.card(activity, CartoonStyle.SOFT_YELLOW);
-        card.addView(V13Ui.text(activity, "🖍️  原创蜡笔家庭手账主题", 17,
-                CartoonStyle.INK, true));
-        TextView description = V13Ui.text(activity,
-                "奶油纸张、贴纸卡片和生活化图标。采用原创设计语言，不包含动漫官方角色或素材。",
-                13, CartoonStyle.MUTED, false);
-        description.setLineSpacing(0f, 1.15f);
-        description.setPadding(0, V13Ui.dp(activity, 5), 0, 0);
-        card.addView(description);
+    private void addAppearanceCard() {
+        LinearLayout card = card("🖍️  外观与图标", CartoonStyle.SOFT_YELLOW,
+                "采用原创 Canvas 蜡笔图标，分类含义和分组参考你提供的软件截图。">
+                replace(">", ""));
+        TextView theme = choiceRow("主题风格", "蜡笔家庭手账");
+        theme.setOnClickListener(v -> new AlertDialog.Builder(activity)
+                .setTitle("蜡笔家庭手账")
+                .setMessage("奶油纸张、粗线条、贴纸卡片和语义化手绘图标。图标由应用实时绘制，不依赖 Emoji 字体。")
+                .setPositiveButton("知道了", null)
+                .show());
+        card.addView(theme, rowParams());
+
+        TextView library = choiceRow("分类图标库", "点击浏览支出与收入图标");
+        library.setOnClickListener(v -> showIconLibraryChoice());
+        card.addView(library, rowParamsWithTop());
         content.addView(card);
     }
 
-    private void addDefaultLedgerCard() {
-        LinearLayout card = V13Ui.card(activity, CartoonStyle.SOFT_PEACH);
-        card.addView(V13Ui.text(activity, "📒  默认账本", 17, CartoonStyle.INK, true));
-        card.addView(description("每次打开软件时优先进入这个账本。"));
+    private void addDefaultsCard() {
+        LinearLayout card = card("📌  记账默认值", CartoonStyle.SOFT_PEACH,
+                "这些选项会直接影响下次打开软件和新建账单。">
+                replace(">", ""));
+
         List<LedgerDb.Ledger> ledgers = db.getLedgers();
-        Spinner spinner = new Spinner(activity);
-        spinner.setAdapter(new ArrayAdapter<>(activity,
-                android.R.layout.simple_spinner_dropdown_item, ledgers));
-        long saved = settings.defaultLedgerId();
-        long desired = containsLedger(ledgers, saved) ? saved : currentLedgerId;
-        int position = ledgerPosition(ledgers, desired);
-        spinner.setSelection(Math.max(0, position));
-        boolean[] ready = {false};
-        spinner.post(() -> ready[0] = true);
-        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override public void onItemSelected(AdapterView<?> parent, View view, int selected, long id) {
-                if (!ready[0] || selected < 0 || selected >= ledgers.size()) return;
-                LedgerDb.Ledger ledger = ledgers.get(selected);
-                settings.setDefaultLedgerId(ledger.id);
-                if (listener != null) listener.onLedgerSelected(ledger.id);
-            }
-            @Override public void onNothingSelected(AdapterView<?> parent) { }
-        });
-        card.addView(spinner);
-        content.addView(card);
-    }
+        List<String> ledgerLabels = new ArrayList<>();
+        for (LedgerDb.Ledger ledger : ledgers) ledgerLabels.add(ledger.name);
+        long configuredLedger = settings.defaultLedgerId();
+        int ledgerIndex = ledgerPosition(ledgers,
+                containsLedger(ledgers, configuredLedger) ? configuredLedger : currentLedgerId);
+        TextView ledgerRow = choiceRow("默认账本",
+                ledgerLabels.isEmpty() ? "暂无账本" : ledgerLabels.get(Math.max(0, ledgerIndex)));
+        ledgerRow.setOnClickListener(v -> showSingleChoice("选择默认账本", ledgerLabels,
+                ledgerIndex, selected -> {
+                    if (selected < 0 || selected >= ledgers.size()) return;
+                    LedgerDb.Ledger ledger = ledgers.get(selected);
+                    settings.setDefaultLedgerId(ledger.id);
+                    setChoiceValue(ledgerRow, "默认账本", ledger.name);
+                    if (listener != null) listener.onLedgerSelected(ledger.id);
+                }));
+        card.addView(ledgerRow, rowParams());
 
-    private void addDefaultAccountCard() {
-        LinearLayout card = V13Ui.card(activity, CartoonStyle.SOFT_SKY);
-        card.addView(V13Ui.text(activity, "👛  默认记账账户", 17, CartoonStyle.INK, true));
-        card.addView(description("打开记账弹窗时优先选择该账户。"));
         List<LedgerDb.Account> accounts = db.getAccounts(currentLedgerId);
-        if (accounts.isEmpty()) {
-            card.addView(description("当前账本还没有账户。"));
-        } else {
-            List<String> labels = new ArrayList<>();
-            for (LedgerDb.Account account : accounts) {
-                labels.add(CartoonStyle.accountIcon(account.type) + "  " + account.name
-                        + " · " + account.type);
-            }
-            Spinner spinner = new Spinner(activity);
-            spinner.setAdapter(new ArrayAdapter<>(activity,
-                    android.R.layout.simple_spinner_dropdown_item, labels));
-            int position = accountPosition(accounts, settings.defaultAccountId(currentLedgerId));
-            spinner.setSelection(Math.max(0, position));
-            boolean[] ready = {false};
-            spinner.post(() -> ready[0] = true);
-            spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                @Override public void onItemSelected(AdapterView<?> parent, View view,
-                                                     int selected, long id) {
-                    if (!ready[0] || selected < 0 || selected >= accounts.size()) return;
-                    settings.setDefaultAccountId(currentLedgerId, accounts.get(selected).id);
-                    if (listener != null) listener.onSettingsChanged();
-                }
-                @Override public void onNothingSelected(AdapterView<?> parent) { }
-            });
-            card.addView(spinner);
+        List<String> accountLabels = new ArrayList<>();
+        for (LedgerDb.Account account : accounts) {
+            accountLabels.add(account.name + " · " + account.type);
         }
-        content.addView(card);
-    }
+        int accountIndex = accountPosition(accounts, settings.defaultAccountId(currentLedgerId));
+        String accountValue = accounts.isEmpty() ? "当前账本暂无账户"
+                : accountLabels.get(Math.max(0, accountIndex));
+        TextView accountRow = choiceRow("默认记账账户", accountValue);
+        accountRow.setEnabled(!accounts.isEmpty());
+        accountRow.setAlpha(accounts.isEmpty() ? 0.55f : 1f);
+        accountRow.setOnClickListener(v -> showSingleChoice("选择默认账户", accountLabels,
+                accountIndex, selected -> {
+                    if (selected < 0 || selected >= accounts.size()) return;
+                    LedgerDb.Account account = accounts.get(selected);
+                    settings.setDefaultAccountId(currentLedgerId, account.id);
+                    setChoiceValue(accountRow, "默认记账账户", accountLabels.get(selected));
+                    changed();
+                }));
+        card.addView(accountRow, rowParamsWithTop());
 
-    private void addBookkeeperCard() {
-        LinearLayout card = V13Ui.card(activity, CartoonStyle.SOFT_GREEN);
-        card.addView(V13Ui.text(activity, "🙂  默认记账人", 17, CartoonStyle.INK, true));
-        card.addView(description("新建账单时自动带入，也可以在记账时临时更换。"));
         List<String> keepers = InputCatalog.mergeBookkeepers(
-                new java.util.LinkedHashSet<>(db.getBookkeepers(currentLedgerId)));
-        Spinner spinner = new Spinner(activity);
-        spinner.setAdapter(new ArrayAdapter<>(activity,
-                android.R.layout.simple_spinner_dropdown_item, keepers));
-        int position = keepers.indexOf(settings.defaultBookkeeper());
-        spinner.setSelection(Math.max(0, position));
-        boolean[] ready = {false};
-        spinner.post(() -> ready[0] = true);
-        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override public void onItemSelected(AdapterView<?> parent, View view, int selected, long id) {
-                if (!ready[0] || selected < 0 || selected >= keepers.size()) return;
-                settings.setDefaultBookkeeper(keepers.get(selected));
-                if (listener != null) listener.onSettingsChanged();
-            }
-            @Override public void onNothingSelected(AdapterView<?> parent) { }
-        });
-        card.addView(spinner);
+                new LinkedHashSet<>(db.getBookkeepers(currentLedgerId)));
+        int keeperIndex = Math.max(0, keepers.indexOf(settings.defaultBookkeeper()));
+        TextView keeperRow = choiceRow("默认记账人",
+                keepers.isEmpty() ? "本人" : keepers.get(keeperIndex));
+        keeperRow.setOnClickListener(v -> showSingleChoice("选择默认记账人", keepers,
+                keeperIndex, selected -> {
+                    if (selected < 0 || selected >= keepers.size()) return;
+                    String value = keepers.get(selected);
+                    settings.setDefaultBookkeeper(value);
+                    setChoiceValue(keeperRow, "默认记账人", value);
+                    changed();
+                }));
+        card.addView(keeperRow, rowParamsWithTop());
         content.addView(card);
     }
 
     private void addBehaviorCard() {
-        LinearLayout card = V13Ui.card(activity, CartoonStyle.SOFT_LAVENDER);
-        card.addView(V13Ui.text(activity, "✨  使用习惯", 17, CartoonStyle.INK, true));
-        card.addView(description("调整启动位置和页面反馈。"));
+        LinearLayout card = card("✨  使用习惯", CartoonStyle.SOFT_LAVENDER,
+                "启动页面、侧栏反馈和保存后的页面去向。">
+                replace(">", ""));
 
-        Spinner startup = new Spinner(activity);
         String[] pages = {"首页", "日历", "账户", "统计", "设置"};
-        startup.setAdapter(new ArrayAdapter<>(activity,
-                android.R.layout.simple_spinner_dropdown_item, pages));
-        startup.setSelection(settings.startupPage());
-        boolean[] ready = {false};
-        startup.post(() -> ready[0] = true);
-        startup.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override public void onItemSelected(AdapterView<?> parent, View view, int selected, long id) {
-                if (!ready[0]) return;
-                settings.setStartupPage(selected);
-                if (listener != null) listener.onSettingsChanged();
-            }
-            @Override public void onNothingSelected(AdapterView<?> parent) { }
-        });
-        TextView startupLabel = V13Ui.text(activity, "启动后显示", 13,
-                CartoonStyle.MUTED, true);
-        startupLabel.setPadding(0, V13Ui.dp(activity, 8), 0, 0);
-        card.addView(startupLabel);
-        card.addView(startup);
+        int pageIndex = Math.max(0, Math.min(pages.length - 1, settings.startupPage()));
+        TextView startup = choiceRow("启动后显示", pages[pageIndex]);
+        startup.setOnClickListener(v -> showSingleChoice("选择启动页面", asList(pages),
+                pageIndex, selected -> {
+                    settings.setStartupPage(selected);
+                    setChoiceValue(startup, "启动后显示", pages[selected]);
+                    changed();
+                }));
+        card.addView(startup, rowParams());
 
-        CheckBox animations = new CheckBox(activity);
-        animations.setText("启用侧栏动画");
-        animations.setTextColor(CartoonStyle.INK);
-        animations.setChecked(settings.animationsEnabled());
-        animations.setOnCheckedChangeListener((button, checked) -> {
-            settings.setAnimationsEnabled(checked);
-            if (listener != null) listener.onSettingsChanged();
-        });
-        card.addView(animations);
+        CheckBox animations = toggleRow("启用侧栏动画",
+                "关闭后侧栏会立即打开或关闭", settings.animationsEnabled(), checked -> {
+                    settings.setAnimationsEnabled(checked);
+                    changed();
+                });
+        card.addView(animations, rowParamsWithTop());
 
-        CheckBox returnHome = new CheckBox(activity);
-        returnHome.setText("保存账单后返回首页");
-        returnHome.setTextColor(CartoonStyle.INK);
-        returnHome.setChecked(settings.returnHomeAfterSave());
-        returnHome.setOnCheckedChangeListener((button, checked) -> {
-            settings.setReturnHomeAfterSave(checked);
-            if (listener != null) listener.onSettingsChanged();
-        });
-        card.addView(returnHome);
+        CheckBox returnHome = toggleRow("保存账单后返回首页",
+                "关闭时保留当前页面", settings.returnHomeAfterSave(), checked -> {
+                    settings.setReturnHomeAfterSave(checked);
+                    changed();
+                });
+        card.addView(returnHome, rowParamsWithTop());
         content.addView(card);
     }
 
     private void addManagementCard() {
-        LinearLayout card = V13Ui.card(activity, CartoonStyle.SURFACE);
-        card.addView(V13Ui.text(activity, "🧰  管理入口", 17, CartoonStyle.INK, true));
-        card.addView(description("账本、账户和分类资源统一从这里进入。"));
-        TextView ledgers = V13Ui.button(activity, "📒  账本管理", CartoonStyle.SOFT_YELLOW);
+        LinearLayout card = card("🧰  管理入口", CartoonStyle.SOFT_SKY,
+                "点击整行进入对应管理功能。">
+                replace(">", ""));
+
+        TextView ledgers = choiceRow("账本管理", "新增、切换和整理账本");
         ledgers.setOnClickListener(v -> {
             if (listener != null) listener.onOpenLedgerManagement();
         });
-        card.addView(ledgers, buttonParams());
-        card.addView(V13Ui.gap(activity, 7));
-        TextView accounts = V13Ui.button(activity, "👛  账户管理", CartoonStyle.SOFT_SKY);
+        card.addView(ledgers, rowParams());
+
+        TextView accounts = choiceRow("账户管理", "新增账户并查看余额");
         accounts.setOnClickListener(v -> {
             if (listener != null) listener.onOpenAccounts();
         });
-        card.addView(accounts, buttonParams());
-        card.addView(V13Ui.gap(activity, 7));
-        TextView categories = V13Ui.button(activity, "🗂️  查看分类图标库", CartoonStyle.SOFT_PEACH);
-        categories.setOnClickListener(v -> showCategorySummary());
-        card.addView(categories, buttonParams());
+        card.addView(accounts, rowParamsWithTop());
         content.addView(card);
     }
 
     private void addAboutCard() {
-        LinearLayout card = V13Ui.card(activity, CartoonStyle.SURFACE);
-        card.addView(V13Ui.text(activity, "ℹ️  关于", 17, CartoonStyle.INK, true));
-        card.addView(description("LedgerBook Lite 1.4.0\n"
-                + "数据仅保存在当前手机的本地 SQLite 数据库中。\n"
-                + "V1.4 不包含云同步、指纹锁或 Excel 导出。"));
+        LinearLayout card = card("ℹ️  关于", CartoonStyle.SURFACE,
+                "LedgerBook Lite 1.4.1\n数据保存在当前手机的本地 SQLite 数据库。">
+                replace(">", ""));
+        TextView diagnostic = choiceRow("设置交互自检", "点击后应立即弹出确认窗口");
+        diagnostic.setOnClickListener(v -> new AlertDialog.Builder(activity)
+                .setTitle("设置交互正常")
+                .setMessage("当前设置页已经接收到点击事件。")
+                .setPositiveButton("确定", null)
+                .show());
+        card.addView(diagnostic, rowParams());
         content.addView(card);
     }
 
-    private void showCategorySummary() {
-        List<InputCatalog.Group> expense = InputCatalog.groups(LedgerDb.TYPE_EXPENSE);
-        List<InputCatalog.Option> expenseOptions = InputCatalog.categories(LedgerDb.TYPE_EXPENSE);
-        List<InputCatalog.Group> income = InputCatalog.groups(LedgerDb.TYPE_INCOME);
-        List<InputCatalog.Option> incomeOptions = InputCatalog.categories(LedgerDb.TYPE_INCOME);
-        new AlertDialog.Builder(activity)
-                .setTitle("🗂️ 分类图标库")
-                .setMessage("支出分类：" + expense.size() + " 个分组，"
-                        + (expenseOptions.size() - 1) + " 个具体图标\n"
-                        + "收入分类：" + income.size() + " 个分组，"
-                        + (incomeOptions.size() - 1) + " 个具体图标\n\n"
-                        + "记账时点击分类即可搜索并选择。")
-                .setPositiveButton("知道了", null)
-                .show();
+    private LinearLayout card(String title, int fill, String description) {
+        LinearLayout card = V13Ui.card(activity, fill);
+        card.addView(V13Ui.text(activity, title, 17, CartoonStyle.INK, true));
+        TextView detail = V13Ui.text(activity, description, 13, CartoonStyle.MUTED, false);
+        detail.setLineSpacing(0f, 1.15f);
+        detail.setPadding(0, V13Ui.dp(activity, 4), 0, V13Ui.dp(activity, 8));
+        card.addView(detail);
+        return card;
     }
 
-    private TextView description(String value) {
-        TextView view = V13Ui.text(activity, value, 13, CartoonStyle.MUTED, false);
-        view.setLineSpacing(0f, 1.15f);
-        view.setPadding(0, V13Ui.dp(activity, 4), 0, V13Ui.dp(activity, 4));
-        return view;
+    private TextView choiceRow(String title, String value) {
+        TextView row = V13Ui.text(activity, "", 15, CartoonStyle.INK, true);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setLineSpacing(0f, 1.14f);
+        row.setPadding(V13Ui.dp(activity, 14), V13Ui.dp(activity, 10),
+                V13Ui.dp(activity, 14), V13Ui.dp(activity, 10));
+        row.setBackground(V13Ui.panel(activity, CartoonStyle.SURFACE,
+                0xFFE1CDB4, 1, 16));
+        row.setClickable(true);
+        row.setFocusable(true);
+        row.setMinHeight(V13Ui.dp(activity, 62));
+        setChoiceValue(row, title, value);
+        return row;
     }
 
-    private LinearLayout.LayoutParams buttonParams() {
+    private void setChoiceValue(TextView row, String title, String value) {
+        row.setText(title + "  ›\n" + (value == null ? "" : value));
+        row.setContentDescription(title + "，当前值：" + value + "，点击修改");
+    }
+
+    private CheckBox toggleRow(String title, String description, boolean checked,
+                               java.util.function.Consumer<Boolean> onChanged) {
+        CheckBox row = new CheckBox(activity);
+        row.setText(title + "\n" + description);
+        row.setTextSize(15);
+        row.setTextColor(CartoonStyle.INK);
+        row.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setPadding(V13Ui.dp(activity, 12), V13Ui.dp(activity, 9),
+                V13Ui.dp(activity, 12), V13Ui.dp(activity, 9));
+        row.setBackground(V13Ui.panel(activity, CartoonStyle.SURFACE,
+                0xFFE1CDB4, 1, 16));
+        row.setChecked(checked);
+        row.setMinHeight(V13Ui.dp(activity, 64));
+        row.setOnCheckedChangeListener((button, value) -> onChanged.accept(value));
+        return row;
+    }
+
+    private void showSingleChoice(String title, List<String> labels, int selected,
+                                  IntConsumer callback) {
+        if (labels == null || labels.isEmpty()) {
+            Toast.makeText(activity, "暂无可选项", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        String[] items = labels.toArray(new String[0]);
+        AlertDialog[] dialog = new AlertDialog[1];
+        dialog[0] = new AlertDialog.Builder(activity)
+                .setTitle(title)
+                .setSingleChoiceItems(items, Math.max(0, Math.min(selected, items.length - 1)),
+                        (whichDialog, which) -> {
+                            callback.accept(which);
+                            dialog[0].dismiss();
+                        })
+                .setNegativeButton("取消", null)
+                .create();
+        dialog[0].show();
+    }
+
+    private void showIconLibraryChoice() {
+        showSingleChoice("浏览分类图标", asList(new String[]{"支出分类", "收入分类"}), 0,
+                selected -> CategoryPickerDialog.show(activity,
+                        selected == 0 ? LedgerDb.TYPE_EXPENSE : LedgerDb.TYPE_INCOME,
+                        (icon, label) -> Toast.makeText(activity,
+                                "已预览：" + label, Toast.LENGTH_SHORT).show()));
+    }
+
+    private void changed() {
+        if (listener != null) listener.onSettingsChanged();
+    }
+
+    private void gap() {
+        content.addView(V13Ui.gap(activity, 10));
+    }
+
+    private LinearLayout.LayoutParams rowParams() {
         return new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, V13Ui.dp(activity, 48));
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+    }
+
+    private LinearLayout.LayoutParams rowParamsWithTop() {
+        LinearLayout.LayoutParams params = rowParams();
+        params.topMargin = V13Ui.dp(activity, 7);
+        return params;
+    }
+
+    private static List<String> asList(String[] values) {
+        List<String> result = new ArrayList<>();
+        java.util.Collections.addAll(result, values);
+        return result;
     }
 
     private static boolean containsLedger(List<LedgerDb.Ledger> values, long id) {
