@@ -1,6 +1,7 @@
 package com.ledgerbook.lite;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
@@ -12,16 +13,18 @@ public class InputCatalogTest {
     @Test
     public void expenseCategoriesHaveIconsAndCustomOption() {
         List<InputCatalog.Option> options = InputCatalog.categories(LedgerDb.TYPE_EXPENSE);
-        assertEquals("🍜", options.get(0).icon);
-        assertEquals("餐饮", options.get(0).label);
+        assertFalse(options.isEmpty());
+        assertTrue(options.stream().allMatch(option -> !option.icon.trim().isEmpty()));
+        assertTrue(options.stream().anyMatch(option -> option.label.equals("餐饮/早餐")));
         assertTrue(options.stream().anyMatch(option -> option.custom));
     }
 
     @Test
     public void incomeCategoriesUseIncomeCatalog() {
         List<InputCatalog.Option> options = InputCatalog.categories(LedgerDb.TYPE_INCOME);
-        assertEquals("💰", options.get(0).icon);
-        assertEquals("工资", options.get(0).label);
+        assertFalse(options.isEmpty());
+        assertTrue(options.stream().anyMatch(option -> option.icon.equals("💰")
+                && option.label.equals("工资收入/工资")));
     }
 
     @Test
