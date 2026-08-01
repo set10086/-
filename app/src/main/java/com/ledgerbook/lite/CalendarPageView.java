@@ -60,6 +60,7 @@ public final class CalendarPageView extends LinearLayout {
         TextView previous = V13Ui.button(activity, "‹", CartoonStyle.SURFACE);
         previous.setTextSize(25);
         monthTitle = V13Ui.button(activity, month.format(monthFormatter), CartoonStyle.SOFT_YELLOW);
+        monthTitle.setContentDescription("选择年份和月份");
         TextView today = V13Ui.button(activity, "今天", CartoonStyle.SOFT_GREEN);
         TextView next = V13Ui.button(activity, "›", CartoonStyle.SURFACE);
         next.setTextSize(25);
@@ -95,6 +96,8 @@ public final class CalendarPageView extends LinearLayout {
         addView(dayScroll, new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
 
         previous.setOnClickListener(v -> setMonth(month.minusMonths(1)));
+        monthTitle.setOnClickListener(v -> YearMonthPickerDialog.show(
+                activity, month, this::setMonth));
         next.setOnClickListener(v -> setMonth(month.plusMonths(1)));
         today.setOnClickListener(v -> {
             selectedDate = LocalDate.now();
