@@ -8,6 +8,7 @@ on:
       - ledgerbook-lite-v1.2-inputs
       - ledgerbook-lite-v1.3-navigation
       - ledgerbook-lite-v1.4-crayon-settings
+      - ledgerbook-lite-v1.4.1-settings-icons
   pull_request:
     branches:
       - main
@@ -67,15 +68,15 @@ jobs:
 
       - name: Prepare artifact
         run: |
-          cp app/build/outputs/apk/debug/app-debug.apk LedgerBook-Lite-v1.4.0.apk
-          sha256sum LedgerBook-Lite-v1.4.0.apk > LedgerBook-Lite-v1.4.0.sha256
+          cp app/build/outputs/apk/debug/app-debug.apk LedgerBook-Lite-v1.4.1.apk
+          sha256sum LedgerBook-Lite-v1.4.1.apk > LedgerBook-Lite-v1.4.1.sha256
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: LedgerBook-Lite-V1.4-APK
+          name: LedgerBook-Lite-V1.4.1-APK
           path: |
-            LedgerBook-Lite-v1.4.0.apk
-            LedgerBook-Lite-v1.4.0.sha256
+            LedgerBook-Lite-v1.4.1.apk
+            LedgerBook-Lite-v1.4.1.sha256
           if-no-files-found: error
           retention-days: 30
