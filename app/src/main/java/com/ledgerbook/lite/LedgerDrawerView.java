@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.text.InputType;
 import android.view.Gravity;
-import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
@@ -27,6 +26,9 @@ public final class LedgerDrawerView extends LinearLayout {
     private final LedgerDb db;
     private final Listener listener;
     private final LinearLayout list;
+    private final int baseSidePadding;
+    private final int baseTopPadding;
+    private final int baseBottomPadding;
     private long currentLedgerId;
 
     public LedgerDrawerView(Activity activity, LedgerDb db, long currentLedgerId, Listener listener) {
@@ -37,13 +39,13 @@ public final class LedgerDrawerView extends LinearLayout {
         this.listener = listener;
         setOrientation(VERTICAL);
         setBackgroundColor(CartoonStyle.BACKGROUND);
-        int side = V13Ui.dp(activity, 14);
-        int top = V13Ui.dp(activity, 14);
-        int bottom = V13Ui.dp(activity, 14);
-        setPadding(side, top, side, bottom);
+        baseSidePadding = V13Ui.dp(activity, 14);
+        baseTopPadding = V13Ui.dp(activity, 14);
+        baseBottomPadding = V13Ui.dp(activity, 14);
+        applySystemInsets(0, 0);
         setOnApplyWindowInsetsListener((view, insets) -> {
-            setPadding(side, top + insets.getSystemWindowInsetTop(), side,
-                    bottom + insets.getSystemWindowInsetBottom());
+            applySystemInsets(insets.getSystemWindowInsetTop(),
+                    insets.getSystemWindowInsetBottom());
             return insets;
         });
 
@@ -69,6 +71,17 @@ public final class LedgerDrawerView extends LinearLayout {
         manage.setOnClickListener(v -> showManagement());
         addView(manage, new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, V13Ui.dp(activity, 52)));
         refresh();
+    }
+
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        requestApplyInsets();
+    }
+
+    public void applySystemInsets(int top, int bottom) {
+        setPadding(baseSidePadding, baseTopPadding + Math.max(0, top),
+                baseSidePadding, baseBottomPadding + Math.max(0, bottom));
     }
 
     public void setCurrentLedger(long ledgerId) {
