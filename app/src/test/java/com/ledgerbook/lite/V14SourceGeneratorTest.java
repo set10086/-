@@ -16,7 +16,7 @@ public final class V14SourceGeneratorTest {
         Path generated = findFromWorkingDirectory(
                 "app/src/main/java/com/ledgerbook/lite/LedgerV14Activity.java");
         assertTrue("V1.4 activity was not generated: " + generated, Files.exists(generated));
-        String source = Files.readString(generated, StandardCharsets.UTF_8);
+        String source = new String(Files.readAllBytes(generated), StandardCharsets.UTF_8);
 
         assertTrue(source.contains("class LedgerV14Activity"));
         assertTrue(source.contains("private static final int SETTINGS = 4"));
