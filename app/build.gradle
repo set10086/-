@@ -58,9 +58,19 @@ tasks.register('prepareV15Database', Exec) {
     inputs.file rootProject.file('scripts/prepare_v15_database.py')
 }
 
+tasks.register('prepareV15Settings', Exec) {
+    workingDir rootProject.projectDir
+    commandLine 'python3', 'scripts/prepare_v15_settings.py'
+    inputs.file file('src/main/java/com/ledgerbook/lite/SettingsPageView.java')
+    inputs.file file('src/main/java/com/ledgerbook/lite/ModuleRepository.java')
+    inputs.file file('src/main/java/com/ledgerbook/lite/ModuleCenterDialog.java')
+    inputs.file rootProject.file('scripts/prepare_v15_settings.py')
+}
+
 tasks.named('preBuild').configure {
     dependsOn tasks.named('prepareV14')
     dependsOn tasks.named('prepareV15Database')
+    dependsOn tasks.named('prepareV15Settings')
 }
 
 dependencies {
