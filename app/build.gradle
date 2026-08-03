@@ -110,8 +110,16 @@ tasks.register('prepareV15DataUi', Exec) {
     outputs.file generatedSettingsPage
 }
 
-tasks.named('preBuild').configure {
+tasks.register('prepareV15PrivacyUi', Exec) {
     dependsOn tasks.named('prepareV15DataUi')
+    workingDir rootProject.projectDir
+    commandLine 'python3', 'scripts/prepare_v15_privacy_ui.py'
+    inputs.files file('src/main/java/com/ledgerbook/lite/PinSecurity.java'), file('src/main/java/com/ledgerbook/lite/PinStore.java'), file('src/main/java/com/ledgerbook/lite/PrivacySettingsDialog.java'), file('src/main/java/com/ledgerbook/lite/PinUnlockDialog.java'), rootProject.file('scripts/prepare_v15_privacy_ui.py')
+    outputs.files generatedV14Activity, generatedSettingsPage
+}
+
+tasks.named('preBuild').configure {
+    dependsOn tasks.named('prepareV15PrivacyUi')
     dependsOn tasks.named('prepareV15Database')
 }
 
