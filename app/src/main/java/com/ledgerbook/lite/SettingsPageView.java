@@ -199,7 +199,7 @@ public final class SettingsPageView extends ScrollView {
 
     private void addAboutCard() {
         LinearLayout card = card("ℹ️  关于", CartoonStyle.SURFACE,
-                "LedgerBook Lite 1.4.1\n数据保存在当前手机的本地 SQLite 数据库。");
+                "LedgerBook Lite 1.5.0\n数据保存在当前手机的本地 SQLite 数据库。");
         TextView diagnostic = choiceRow("设置交互自检", "点击后应立即弹出确认窗口");
         diagnostic.setOnClickListener(v -> new AlertDialog.Builder(activity)
                 .setTitle("设置交互正常")
