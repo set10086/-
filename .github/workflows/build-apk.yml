@@ -51,7 +51,7 @@ jobs:
           base64 --decode signing/ledgerbook-lite.jks.b64 > signing/ledgerbook-lite.jks
           keytool -list -keystore signing/ledgerbook-lite.jks -storepass ledgerbook123 -alias ledgerbook >/dev/null
 
-      - name: Generate V1.4 activity
+      - name: Generate base activity
         run: python3 scripts/prepare_v14.py
 
       - name: Run unit tests
@@ -63,7 +63,7 @@ jobs:
         with:
           name: V1.5-failed-test-reports
           path: app/build/test-results/testDebugUnitTest/*.xml
-          if-no-files-found: error
+          if-no-files-found: warn
           retention-days: 7
 
       - name: Build debug APK
@@ -78,15 +78,15 @@ jobs:
 
       - name: Prepare artifact
         run: |
-          cp app/build/outputs/apk/debug/app-debug.apk LedgerBook-Lite-v1.4.1.apk
-          sha256sum LedgerBook-Lite-v1.4.1.apk > LedgerBook-Lite-v1.4.1.sha256
+          cp app/build/outputs/apk/debug/app-debug.apk LedgerBook-Lite-v1.5.0.apk
+          sha256sum LedgerBook-Lite-v1.5.0.apk > LedgerBook-Lite-v1.5.0.sha256
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: LedgerBook-Lite-V1.4.1-APK
+          name: LedgerBook-Lite-V1.5.0-APK
           path: |
-            LedgerBook-Lite-v1.4.1.apk
-            LedgerBook-Lite-v1.4.1.sha256
+            LedgerBook-Lite-v1.5.0.apk
+            LedgerBook-Lite-v1.5.0.sha256
           if-no-files-found: error
           retention-days: 30
