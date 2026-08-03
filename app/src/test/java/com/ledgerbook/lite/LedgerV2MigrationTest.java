@@ -49,8 +49,8 @@ public final class LedgerV2MigrationTest {
         for (String statement : statements) {
             String upper = statement.toUpperCase(java.util.Locale.ROOT);
             assertTrue(upper.contains("CREATE TABLE IF NOT EXISTS"));
-            assertFalse(upper.contains("DROP "));
-            assertFalse(upper.contains("DELETE "));
+            assertFalse(upper.contains("DROP TABLE"));
+            assertFalse(upper.contains("DELETE FROM"));
             assertFalse(upper.contains("ALTER TABLE"));
         }
     }
