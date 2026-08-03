@@ -15,15 +15,16 @@ public final class LedgerDeleteV2ContractTest {
         String source = read("app/src/main/java/com/ledgerbook/lite/LedgerDb.java");
         int pending = source.indexOf("db.delete(\"recurring_pending\"");
         int recurring = source.indexOf("db.delete(\"recurring_rules\"");
+        int subscriptions = source.indexOf("db.delete(\"subscriptions\"");
         int templates = source.indexOf("db.delete(\"transaction_templates\"");
         int budgets = source.indexOf("db.delete(\"budgets\"");
         int transactions = source.indexOf("db.delete(\"transactions\"");
         int accounts = source.indexOf("db.delete(\"accounts\"");
         int ledger = source.indexOf("db.delete(\"ledgers\"");
-
         assertTrue(pending >= 0);
         assertTrue(recurring > pending);
-        assertTrue(templates > recurring);
+        assertTrue(subscriptions > recurring);
+        assertTrue(templates > subscriptions);
         assertTrue(budgets > templates);
         assertTrue(transactions > budgets);
         assertTrue(accounts > transactions);
@@ -34,12 +35,9 @@ public final class LedgerDeleteV2ContractTest {
         Path cursor = Paths.get("").toAbsolutePath();
         for (int depth = 0; depth < 6 && cursor != null; depth++) {
             Path candidate = cursor.resolve(relative);
-            if (Files.exists(candidate)) {
-                return new String(Files.readAllBytes(candidate), StandardCharsets.UTF_8);
-            }
+            if (Files.exists(candidate)) return new String(Files.readAllBytes(candidate), StandardCharsets.UTF_8);
             cursor = cursor.getParent();
         }
-        return new String(Files.readAllBytes(Paths.get(relative).toAbsolutePath()),
-                StandardCharsets.UTF_8);
+        return new String(Files.readAllBytes(Paths.get(relative).toAbsolutePath()), StandardCharsets.UTF_8);
     }
 }
