@@ -70,11 +70,12 @@ tasks.register('prepareV15Settings', Exec) {
 tasks.register('prepareV15QuickEntry', Exec) {
     dependsOn tasks.named('prepareV14')
     workingDir rootProject.projectDir
-    commandLine 'python3', 'scripts/prepare_v15_quick_entry.py'
+    commandLine 'python3', 'scripts/run_v15_quick_entry.py'
     inputs.file file('src/main/java/com/ledgerbook/lite/LedgerV13Activity.java')
     inputs.file file('src/main/java/com/ledgerbook/lite/QuickEntryRules.java')
     inputs.file rootProject.file('scripts/prepare_v14.py')
     inputs.file rootProject.file('scripts/prepare_v15_quick_entry.py')
+    inputs.file rootProject.file('scripts/run_v15_quick_entry.py')
     outputs.file generatedV14Activity
 }
 
