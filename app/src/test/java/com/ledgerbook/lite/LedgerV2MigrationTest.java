@@ -33,15 +33,19 @@ public final class LedgerV2MigrationTest {
             assertEquals(0L, scalarLong(connection, "SELECT COUNT(*) FROM user_preferences"));
             assertEquals(0L, scalarLong(connection, "SELECT COUNT(*) FROM budgets"));
             assertEquals(0L, scalarLong(connection, "SELECT COUNT(*) FROM transaction_templates"));
+            assertEquals(0L, scalarLong(connection, "SELECT COUNT(*) FROM recurring_rules"));
+            assertEquals(0L, scalarLong(connection, "SELECT COUNT(*) FROM recurring_pending"));
         }
     }
 
     @Test
     public void migrationStatementsAreIdempotentAndNonDestructive() {
         List<String> statements = LedgerV2Migration.createStatements();
-        assertEquals(4, statements.size());
+        assertEquals(6, statements.size());
         assertTrue(statements.get(2).contains("CREATE TABLE IF NOT EXISTS budgets"));
         assertTrue(statements.get(3).contains("CREATE TABLE IF NOT EXISTS transaction_templates"));
+        assertTrue(statements.get(4).contains("CREATE TABLE IF NOT EXISTS recurring_rules"));
+        assertTrue(statements.get(5).contains("CREATE TABLE IF NOT EXISTS recurring_pending"));
         for (String statement : statements) {
             String upper = statement.toUpperCase(java.util.Locale.ROOT);
             assertTrue(upper.contains("CREATE TABLE IF NOT EXISTS"));
