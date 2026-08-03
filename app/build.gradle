@@ -50,8 +50,17 @@ tasks.register('prepareV14', Exec) {
     outputs.file generatedV14Activity
 }
 
+tasks.register('prepareV15Database', Exec) {
+    workingDir rootProject.projectDir
+    commandLine 'python3', 'scripts/prepare_v15_database.py'
+    inputs.file file('src/main/java/com/ledgerbook/lite/LedgerDb.java')
+    inputs.file file('src/main/java/com/ledgerbook/lite/LedgerV2Migration.java')
+    inputs.file rootProject.file('scripts/prepare_v15_database.py')
+}
+
 tasks.named('preBuild').configure {
     dependsOn tasks.named('prepareV14')
+    dependsOn tasks.named('prepareV15Database')
 }
 
 dependencies {
