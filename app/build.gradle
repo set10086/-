@@ -106,8 +106,20 @@ tasks.register('prepareV15TemplateUi', Exec) {
     outputs.files generatedV14Activity, generatedSettingsPage
 }
 
-tasks.named('preBuild').configure {
+tasks.register('prepareV15RecurringUi', Exec) {
     dependsOn tasks.named('prepareV15TemplateUi')
+    workingDir rootProject.projectDir
+    commandLine 'python3', 'scripts/prepare_v15_recurring_ui.py'
+    inputs.file file('src/main/java/com/ledgerbook/lite/RecurringRules.java')
+    inputs.file file('src/main/java/com/ledgerbook/lite/RecurringRepository.java')
+    inputs.file file('src/main/java/com/ledgerbook/lite/RecurringHomeCard.java')
+    inputs.file file('src/main/java/com/ledgerbook/lite/RecurringManagerDialog.java')
+    inputs.file rootProject.file('scripts/prepare_v15_recurring_ui.py')
+    outputs.files generatedV14Activity, generatedSettingsPage
+}
+
+tasks.named('preBuild').configure {
+    dependsOn tasks.named('prepareV15RecurringUi')
     dependsOn tasks.named('prepareV15Database')
 }
 
