@@ -48,6 +48,25 @@ public final class LedgerV2Migration {
                 + "updated_at INTEGER NOT NULL,"
                 + "UNIQUE(ledger_id,month_key,category_key),"
                 + "FOREIGN KEY(ledger_id) REFERENCES ledgers(id))");
+        statements.add("CREATE TABLE IF NOT EXISTS transaction_templates ("
+                + "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                + "ledger_id INTEGER NOT NULL,"
+                + "name TEXT NOT NULL,"
+                + "type TEXT NOT NULL,"
+                + "category TEXT NOT NULL,"
+                + "amount_cents INTEGER NOT NULL CHECK(amount_cents>0),"
+                + "discount_cents INTEGER NOT NULL DEFAULT 0,"
+                + "account_id INTEGER NOT NULL,"
+                + "to_account_id INTEGER,"
+                + "bookkeeper TEXT NOT NULL DEFAULT '本人',"
+                + "tags TEXT NOT NULL DEFAULT '',"
+                + "reimbursable INTEGER NOT NULL DEFAULT 0 CHECK(reimbursable IN (0,1)),"
+                + "include_budget INTEGER NOT NULL DEFAULT 1 CHECK(include_budget IN (0,1)),"
+                + "note TEXT NOT NULL DEFAULT '',"
+                + "sort_order INTEGER NOT NULL DEFAULT 0,"
+                + "created_at INTEGER NOT NULL,"
+                + "updated_at INTEGER NOT NULL,"
+                + "FOREIGN KEY(ledger_id) REFERENCES ledgers(id))");
         CREATE_STATEMENTS = Collections.unmodifiableList(statements);
 
         List<ModuleSeed> modules = new ArrayList<>();
