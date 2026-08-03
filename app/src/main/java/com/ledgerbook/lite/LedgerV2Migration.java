@@ -38,6 +38,16 @@ public final class LedgerV2Migration {
                 + "pref_key TEXT PRIMARY KEY,"
                 + "pref_value TEXT NOT NULL,"
                 + "updated_at INTEGER NOT NULL)");
+        statements.add("CREATE TABLE IF NOT EXISTS budgets ("
+                + "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                + "ledger_id INTEGER NOT NULL,"
+                + "month_key TEXT NOT NULL,"
+                + "category_key TEXT NOT NULL DEFAULT '',"
+                + "amount_cents INTEGER NOT NULL CHECK(amount_cents>0),"
+                + "created_at INTEGER NOT NULL,"
+                + "updated_at INTEGER NOT NULL,"
+                + "UNIQUE(ledger_id,month_key,category_key),"
+                + "FOREIGN KEY(ledger_id) REFERENCES ledgers(id))");
         CREATE_STATEMENTS = Collections.unmodifiableList(statements);
 
         List<ModuleSeed> modules = new ArrayList<>();
