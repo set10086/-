@@ -1,0 +1,137 @@
+plugins { id 'com.android.application' }
+
+android {
+    namespace 'com.ledgerbook.lite'
+    compileSdk 35
+    defaultConfig {
+        applicationId 'com.ledgerbook.lite'
+        minSdk 26
+        targetSdk 35
+        versionCode 7
+        versionName '1.5.0'
+    }
+    signingConfigs {
+        stableSideload {
+            storeFile file('../signing/ledgerbook-lite.jks')
+            storePassword 'ledgerbook123'
+            keyAlias 'ledgerbook'
+            keyPassword 'ledgerbook123'
+        }
+    }
+    buildTypes {
+        debug { signingConfig signingConfigs.stableSideload }
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.stableSideload
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+def generatedV14Activity = file('src/main/java/com/ledgerbook/lite/LedgerV14Activity.java')
+def generatedSettingsPage = file('src/main/java/com/ledgerbook/lite/SettingsPageView.java')
+
+tasks.register('prepareV14', Exec) {
+    workingDir rootProject.projectDir
+    commandLine 'python3', 'scripts/prepare_v14.py'
+    inputs.file file('src/main/java/com/ledgerbook/lite/LedgerV13Activity.java')
+    inputs.file rootProject.file('scripts/prepare_v14.py')
+    outputs.file generatedV14Activity
+}
+
+tasks.register('prepareV15Database', Exec) {
+    workingDir rootProject.projectDir
+    commandLine 'python3', 'scripts/prepare_v15_database.py'
+    inputs.file file('src/main/java/com/ledgerbook/lite/LedgerDb.java')
+    inputs.file file('src/main/java/com/ledgerbook/lite/LedgerV2Migration.java')
+    inputs.file rootProject.file('scripts/prepare_v15_database.py')
+}
+
+tasks.register('prepareV15Settings', Exec) {
+    workingDir rootProject.projectDir
+    commandLine 'python3', 'scripts/prepare_v15_settings.py'
+    inputs.file file('src/main/java/com/ledgerbook/lite/SettingsPageView.java')
+    inputs.file file('src/main/java/com/ledgerbook/lite/ModuleRepository.java')
+    inputs.file file('src/main/java/com/ledgerbook/lite/ModuleCenterDialog.java')
+    inputs.file rootProject.file('scripts/prepare_v15_settings.py')
+    outputs.file generatedSettingsPage
+}
+
+tasks.register('prepareV15QuickEntry', Exec) {
+    dependsOn tasks.named('prepareV14')
+    workingDir rootProject.projectDir
+    commandLine 'python3', 'scripts/run_v15_quick_entry.py'
+    inputs.files file('src/main/java/com/ledgerbook/lite/LedgerV13Activity.java'), file('src/main/java/com/ledgerbook/lite/QuickEntryRules.java')
+    inputs.files rootProject.file('scripts/prepare_v14.py'), rootProject.file('scripts/prepare_v15_quick_entry.py'), rootProject.file('scripts/run_v15_quick_entry.py')
+    outputs.file generatedV14Activity
+}
+
+tasks.register('prepareV15BudgetUi', Exec) {
+    dependsOn tasks.named('prepareV15QuickEntry'), tasks.named('prepareV15Settings')
+    workingDir rootProject.projectDir
+    commandLine 'python3', 'scripts/prepare_v15_budget_ui.py'
+    inputs.files file('src/main/java/com/ledgerbook/lite/BudgetRules.java'), file('src/main/java/com/ledgerbook/lite/BudgetRepository.java'), file('src/main/java/com/ledgerbook/lite/BudgetHomeCard.java'), file('src/main/java/com/ledgerbook/lite/BudgetManagerDialog.java'), rootProject.file('scripts/prepare_v15_budget_ui.py')
+    outputs.files generatedV14Activity, generatedSettingsPage
+}
+
+tasks.register('prepareV15TemplateUi', Exec) {
+    dependsOn tasks.named('prepareV15BudgetUi')
+    workingDir rootProject.projectDir
+    commandLine 'python3', 'scripts/prepare_v15_template_ui.py'
+    inputs.files file('src/main/java/com/ledgerbook/lite/TemplateRules.java'), file('src/main/java/com/ledgerbook/lite/TemplateRepository.java'), file('src/main/java/com/ledgerbook/lite/TemplateHomeCard.java'), file('src/main/java/com/ledgerbook/lite/TemplateManagerDialog.java'), rootProject.file('scripts/prepare_v15_template_ui.py')
+    outputs.files generatedV14Activity, generatedSettingsPage
+}
+
+tasks.register('prepareV15RecurringUi', Exec) {
+    dependsOn tasks.named('prepareV15TemplateUi')
+    workingDir rootProject.projectDir
+    commandLine 'python3', 'scripts/prepare_v15_recurring_ui.py'
+    inputs.files file('src/main/java/com/ledgerbook/lite/RecurringRules.java'), file('src/main/java/com/ledgerbook/lite/RecurringRepository.java'), file('src/main/java/com/ledgerbook/lite/RecurringHomeCard.java'), file('src/main/java/com/ledgerbook/lite/RecurringManagerDialog.java'), rootProject.file('scripts/prepare_v15_recurring_ui.py')
+    outputs.files generatedV14Activity, generatedSettingsPage
+}
+
+tasks.register('prepareV15SubscriptionUi', Exec) {
+    dependsOn tasks.named('prepareV15RecurringUi')
+    workingDir rootProject.projectDir
+    commandLine 'python3', 'scripts/prepare_v15_subscription_ui.py'
+    inputs.files file('src/main/java/com/ledgerbook/lite/SubscriptionRules.java'), file('src/main/java/com/ledgerbook/lite/SubscriptionRepository.java'), file('src/main/java/com/ledgerbook/lite/SubscriptionHomeCard.java'), file('src/main/java/com/ledgerbook/lite/SubscriptionManagerDialog.java'), rootProject.file('scripts/prepare_v15_subscription_ui.py')
+    outputs.files generatedV14Activity, generatedSettingsPage
+}
+
+tasks.register('prepareV15DataUi', Exec) {
+    dependsOn tasks.named('prepareV15SubscriptionUi')
+    workingDir rootProject.projectDir
+    commandLine 'python3', 'scripts/prepare_v15_data_ui.py'
+    inputs.files file('src/main/java/com/ledgerbook/lite/DataManagementService.java'), file('src/main/java/com/ledgerbook/lite/DataManagementDialog.java'), rootProject.file('scripts/prepare_v15_data_ui.py')
+    outputs.file generatedSettingsPage
+}
+
+tasks.register('prepareV15PrivacyUi', Exec) {
+    dependsOn tasks.named('prepareV15DataUi')
+    workingDir rootProject.projectDir
+    commandLine 'python3', 'scripts/prepare_v15_privacy_ui.py'
+    inputs.files file('src/main/java/com/ledgerbook/lite/PinSecurity.java'), file('src/main/java/com/ledgerbook/lite/PinStore.java'), file('src/main/java/com/ledgerbook/lite/PrivacySettingsDialog.java'), file('src/main/java/com/ledgerbook/lite/PinUnlockDialog.java'), rootProject.file('scripts/prepare_v15_privacy_ui.py')
+    outputs.files generatedV14Activity, generatedSettingsPage
+}
+
+tasks.register('prepareV15StatisticsUi', Exec) {
+    dependsOn tasks.named('prepareV15PrivacyUi')
+    workingDir rootProject.projectDir
+    commandLine 'python3', 'scripts/prepare_v15_statistics_ui.py'
+    inputs.files file('src/main/java/com/ledgerbook/lite/StatisticsRules.java'), file('src/main/java/com/ledgerbook/lite/StatisticsRepository.java'), file('src/main/java/com/ledgerbook/lite/StatisticsDashboardView.java'), rootProject.file('scripts/prepare_v15_statistics_ui.py')
+    outputs.file generatedV14Activity
+}
+
+tasks.named('preBuild').configure {
+    dependsOn tasks.named('prepareV15StatisticsUi')
+    dependsOn tasks.named('prepareV15Database')
+}
+
+dependencies {
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.xerial:sqlite-jdbc:3.46.0.0'
+}
