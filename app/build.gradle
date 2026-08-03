@@ -5,7 +5,6 @@ plugins {
 android {
     namespace 'com.ledgerbook.lite'
     compileSdk 35
-
     defaultConfig {
         applicationId 'com.ledgerbook.lite'
         minSdk 26
@@ -13,7 +12,6 @@ android {
         versionCode 6
         versionName '1.4.1'
     }
-
     signingConfigs {
         stableSideload {
             storeFile file('../signing/ledgerbook-lite.jks')
@@ -22,18 +20,14 @@ android {
             keyPassword 'ledgerbook123'
         }
     }
-
     buildTypes {
-        debug {
-            signingConfig signingConfigs.stableSideload
-        }
+        debug { signingConfig signingConfigs.stableSideload }
         release {
             minifyEnabled false
             signingConfig signingConfigs.stableSideload
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
-
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
@@ -118,8 +112,20 @@ tasks.register('prepareV15RecurringUi', Exec) {
     outputs.files generatedV14Activity, generatedSettingsPage
 }
 
-tasks.named('preBuild').configure {
+tasks.register('prepareV15SubscriptionUi', Exec) {
     dependsOn tasks.named('prepareV15RecurringUi')
+    workingDir rootProject.projectDir
+    commandLine 'python3', 'scripts/prepare_v15_subscription_ui.py'
+    inputs.file file('src/main/java/com/ledgerbook/lite/SubscriptionRules.java')
+    inputs.file file('src/main/java/com/ledgerbook/lite/SubscriptionRepository.java')
+    inputs.file file('src/main/java/com/ledgerbook/lite/SubscriptionHomeCard.java')
+    inputs.file file('src/main/java/com/ledgerbook/lite/SubscriptionManagerDialog.java')
+    inputs.file rootProject.file('scripts/prepare_v15_subscription_ui.py')
+    outputs.files generatedV14Activity, generatedSettingsPage
+}
+
+tasks.named('preBuild').configure {
+    dependsOn tasks.named('prepareV15SubscriptionUi')
     dependsOn tasks.named('prepareV15Database')
 }
 
