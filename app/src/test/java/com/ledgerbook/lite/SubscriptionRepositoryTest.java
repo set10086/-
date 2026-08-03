@@ -2,7 +2,6 @@ package com.ledgerbook.lite;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -14,14 +13,11 @@ public final class SubscriptionRepositoryTest {
     public void createFromExpenseCalculatesTotalsAndReminders() {
         FakeBackend backend = new FakeBackend();
         SubscriptionRepository repository = new SubscriptionRepository(backend);
-        LedgerDb.Txn source = expense(3_000L, 4L);
-
-        long id = repository.createFromTransaction(1L, "音乐会员", source,
+        long id = repository.createFromTransaction(1L, "音乐会员", expense(3_000L, 4L),
                 SubscriptionRules.Frequency.MONTHLY, 1,
                 LocalDate.of(2026, 8, 8), "家庭套餐");
         SubscriptionRepository.Snapshot snapshot = repository.snapshot(
                 1L, LocalDate.of(2026, 8, 3), 7);
-
         assertEquals(1L, id);
         assertEquals(1, snapshot.values.size());
         assertEquals(3_000L, snapshot.monthlyCents);
@@ -37,18 +33,16 @@ public final class SubscriptionRepositoryTest {
         long id = repository.createFromTransaction(1L, "云盘", expense(1_000L, 3L),
                 SubscriptionRules.Frequency.MONTHLY, 1,
                 LocalDate.of(2026, 1, 31), "");
-
         repository.advanceAfterPosting(id);
-        assertEquals(LocalDate.of(2026, 2, 28), backend.find(id).nextChargeDate);
+        assertEquals(LocalDate.of(2026, 2, 28), backend.get(id).nextChargeDate);
         repository.advanceAfterPosting(id);
-        assertEquals(LocalDate.of(2026, 3, 31), backend.find(id).nextChargeDate);
-
+        assertEquals(LocalDate.of(2026, 3, 31), backend.get(id).nextChargeDate);
         repository.setActive(id, false);
         SubscriptionRepository.Snapshot paused = repository.snapshot(
                 1L, LocalDate.of(2026, 3, 1), 30);
         assertEquals(0L, paused.monthlyCents);
         assertEquals(0, paused.upcomingCount);
-        assertFalse(backend.find(id).active);
+        assertFalse(backend.get(id).active);
     }
 
     @Test
@@ -61,7 +55,6 @@ public final class SubscriptionRepositoryTest {
         repository.createFromTransaction(1L, "B", expense(200L, 1L),
                 SubscriptionRules.Frequency.YEARLY, 1,
                 LocalDate.of(2026, 9, 1), "");
-
         repository.delete(first);
         assertEquals(1, repository.list(1L).size());
         assertEquals("B", repository.list(1L).get(0).name);
@@ -89,10 +82,13 @@ public final class SubscriptionRepositoryTest {
 
         @Override public List<SubscriptionRepository.Subscription> load(long ledgerId) {
             List<SubscriptionRepository.Subscription> result = new ArrayList<>();
-            for (SubscriptionRepository.Subscription value : values) {
-                if (value.ledgerId == ledgerId) result.add(value);
-            }
+            for (SubscriptionRepository.Subscription value : values) if (value.ledgerId == ledgerId) result.add(value);
             return result;
+        }
+
+        @Override public SubscriptionRepository.Subscription get(long id) {
+            for (SubscriptionRepository.Subscription value : values) if (value.id == id) return value;
+            throw new IllegalArgumentException("missing subscription");
         }
 
         @Override public long insert(SubscriptionRepository.Subscription value, long now) {
@@ -123,13 +119,6 @@ public final class SubscriptionRepositoryTest {
 
         @Override public void delete(long id) {
             values.removeIf(value -> value.id == id);
-        }
-
-        SubscriptionRepository.Subscription find(long id) {
-            for (SubscriptionRepository.Subscription value : values) {
-                if (value.id == id) return value;
-            }
-            throw new AssertionError("missing subscription");
         }
     }
 }
