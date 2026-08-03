@@ -18,34 +18,31 @@ public final class LedgerV2MigrationTest {
         try (Connection connection = DriverManager.getConnection("jdbc:sqlite::memory:")) {
             createV1Schema(connection);
             insertV1Fixture(connection);
-
             LedgerV2Migration.apply((sql, args) -> execute(connection, sql, args), 1_700_000_000_000L);
-
             assertEquals(1L, scalarLong(connection, "SELECT COUNT(*) FROM ledgers"));
             assertEquals("家庭账本", scalarText(connection, "SELECT name FROM ledgers WHERE id=1"));
-            assertEquals(123_456L,
-                    scalarLong(connection, "SELECT balance_cents FROM accounts WHERE id=1"));
-            assertEquals("餐饮/午餐",
-                    scalarText(connection, "SELECT category FROM transactions WHERE id=1"));
-            assertEquals(2_580L,
-                    scalarLong(connection, "SELECT amount_cents FROM transactions WHERE id=1"));
+            assertEquals(123_456L, scalarLong(connection, "SELECT balance_cents FROM accounts WHERE id=1"));
+            assertEquals("餐饮/午餐", scalarText(connection, "SELECT category FROM transactions WHERE id=1"));
+            assertEquals(2_580L, scalarLong(connection, "SELECT amount_cents FROM transactions WHERE id=1"));
             assertEquals(7L, scalarLong(connection, "SELECT COUNT(*) FROM app_modules"));
             assertEquals(0L, scalarLong(connection, "SELECT COUNT(*) FROM user_preferences"));
             assertEquals(0L, scalarLong(connection, "SELECT COUNT(*) FROM budgets"));
             assertEquals(0L, scalarLong(connection, "SELECT COUNT(*) FROM transaction_templates"));
             assertEquals(0L, scalarLong(connection, "SELECT COUNT(*) FROM recurring_rules"));
             assertEquals(0L, scalarLong(connection, "SELECT COUNT(*) FROM recurring_pending"));
+            assertEquals(0L, scalarLong(connection, "SELECT COUNT(*) FROM subscriptions"));
         }
     }
 
     @Test
     public void migrationStatementsAreIdempotentAndNonDestructive() {
         List<String> statements = LedgerV2Migration.createStatements();
-        assertEquals(6, statements.size());
+        assertEquals(7, statements.size());
         assertTrue(statements.get(2).contains("CREATE TABLE IF NOT EXISTS budgets"));
         assertTrue(statements.get(3).contains("CREATE TABLE IF NOT EXISTS transaction_templates"));
         assertTrue(statements.get(4).contains("CREATE TABLE IF NOT EXISTS recurring_rules"));
         assertTrue(statements.get(5).contains("CREATE TABLE IF NOT EXISTS recurring_pending"));
+        assertTrue(statements.get(6).contains("CREATE TABLE IF NOT EXISTS subscriptions"));
         for (String statement : statements) {
             String upper = statement.toUpperCase(java.util.Locale.ROOT);
             assertTrue(upper.contains("CREATE TABLE IF NOT EXISTS"));
@@ -73,9 +70,7 @@ public final class LedgerV2MigrationTest {
 
     private static void execute(Connection connection, String sql, Object[] args) {
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            for (int index = 0; index < args.length; index++) {
-                statement.setObject(index + 1, args[index]);
-            }
+            for (int index = 0; index < args.length; index++) statement.setObject(index + 1, args[index]);
             statement.executeUpdate();
         } catch (Exception error) {
             throw new IllegalStateException(error);
@@ -83,15 +78,13 @@ public final class LedgerV2MigrationTest {
     }
 
     private static long scalarLong(Connection connection, String sql) throws Exception {
-        try (Statement statement = connection.createStatement();
-             ResultSet result = statement.executeQuery(sql)) {
+        try (Statement statement = connection.createStatement(); ResultSet result = statement.executeQuery(sql)) {
             return result.next() ? result.getLong(1) : 0L;
         }
     }
 
     private static String scalarText(Connection connection, String sql) throws Exception {
-        try (Statement statement = connection.createStatement();
-             ResultSet result = statement.executeQuery(sql)) {
+        try (Statement statement = connection.createStatement(); ResultSet result = statement.executeQuery(sql)) {
             return result.next() ? result.getString(1) : null;
         }
     }
