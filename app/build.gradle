@@ -118,8 +118,16 @@ tasks.register('prepareV15PrivacyUi', Exec) {
     outputs.files generatedV14Activity, generatedSettingsPage
 }
 
-tasks.named('preBuild').configure {
+tasks.register('prepareV15StatisticsUi', Exec) {
     dependsOn tasks.named('prepareV15PrivacyUi')
+    workingDir rootProject.projectDir
+    commandLine 'python3', 'scripts/prepare_v15_statistics_ui.py'
+    inputs.files file('src/main/java/com/ledgerbook/lite/StatisticsRules.java'), file('src/main/java/com/ledgerbook/lite/StatisticsRepository.java'), file('src/main/java/com/ledgerbook/lite/StatisticsDashboardView.java'), rootProject.file('scripts/prepare_v15_statistics_ui.py')
+    outputs.file generatedV14Activity
+}
+
+tasks.named('preBuild').configure {
+    dependsOn tasks.named('prepareV15StatisticsUi')
     dependsOn tasks.named('prepareV15Database')
 }
 
