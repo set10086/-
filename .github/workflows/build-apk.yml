@@ -9,6 +9,7 @@ on:
       - ledgerbook-lite-v1.3-navigation
       - ledgerbook-lite-v1.4-crayon-settings
       - ledgerbook-lite-v1.4.1-settings-icons
+      - ledgerbook-lite-v1.5-progressive-finance
   pull_request:
     branches:
       - main
@@ -54,7 +55,15 @@ jobs:
         run: python3 scripts/prepare_v14.py
 
       - name: Run unit tests
-        run: gradle --no-daemon --stacktrace :app:testDebugUnitTest
+        run: |
+          set +e
+          gradle --no-daemon --stacktrace :app:testDebugUnitTest
+          status=$?
+          if [ "$status" -ne 0 ]; then
+            echo "==== Failed unit test XML reports ===="
+            find app/build/test-results/testDebugUnitTest -name '*.xml' -type f -print -exec cat {} \; || true
+            exit "$status"
+          fi
 
       - name: Build debug APK
         run: gradle --no-daemon --stacktrace :app:assembleDebug
