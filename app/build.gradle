@@ -41,6 +41,7 @@ android {
 }
 
 def generatedV14Activity = file('src/main/java/com/ledgerbook/lite/LedgerV14Activity.java')
+def generatedSettingsPage = file('src/main/java/com/ledgerbook/lite/SettingsPageView.java')
 
 tasks.register('prepareV14', Exec) {
     workingDir rootProject.projectDir
@@ -65,6 +66,7 @@ tasks.register('prepareV15Settings', Exec) {
     inputs.file file('src/main/java/com/ledgerbook/lite/ModuleRepository.java')
     inputs.file file('src/main/java/com/ledgerbook/lite/ModuleCenterDialog.java')
     inputs.file rootProject.file('scripts/prepare_v15_settings.py')
+    outputs.file generatedSettingsPage
 }
 
 tasks.register('prepareV15QuickEntry', Exec) {
@@ -79,10 +81,22 @@ tasks.register('prepareV15QuickEntry', Exec) {
     outputs.file generatedV14Activity
 }
 
-tasks.named('preBuild').configure {
+tasks.register('prepareV15BudgetUi', Exec) {
     dependsOn tasks.named('prepareV15QuickEntry')
-    dependsOn tasks.named('prepareV15Database')
     dependsOn tasks.named('prepareV15Settings')
+    workingDir rootProject.projectDir
+    commandLine 'python3', 'scripts/prepare_v15_budget_ui.py'
+    inputs.file file('src/main/java/com/ledgerbook/lite/BudgetRules.java')
+    inputs.file file('src/main/java/com/ledgerbook/lite/BudgetRepository.java')
+    inputs.file file('src/main/java/com/ledgerbook/lite/BudgetHomeCard.java')
+    inputs.file file('src/main/java/com/ledgerbook/lite/BudgetManagerDialog.java')
+    inputs.file rootProject.file('scripts/prepare_v15_budget_ui.py')
+    outputs.files generatedV14Activity, generatedSettingsPage
+}
+
+tasks.named('preBuild').configure {
+    dependsOn tasks.named('prepareV15BudgetUi')
+    dependsOn tasks.named('prepareV15Database')
 }
 
 dependencies {
