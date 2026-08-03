@@ -17,6 +17,10 @@ def verify_prepared(text: str) -> None:
         "private static final int DB_VERSION = LedgerV2Migration.VERSION;",
         "if (oldVersion < 2) applyV2Migration(db);",
         "LedgerV2Migration.apply((sql, args) ->",
+        'db.delete("recurring_pending"',
+        'db.delete("recurring_rules"',
+        'db.delete("transaction_templates"',
+        'db.delete("budgets"',
     ]
     missing = [value for value in required if value not in text]
     if missing:
@@ -66,6 +70,22 @@ def main() -> None:
         "    }\n\n"
         "    public void ensureDefaults() {",
         "upgrade migration",
+    )
+
+    text = replace_once(
+        text,
+        "            db.delete(\"transactions\", \"ledger_id=?\", new String[]{String.valueOf(ledgerId)});\n"
+        "            db.delete(\"accounts\", \"ledger_id=?\", new String[]{String.valueOf(ledgerId)});",
+        "            String[] ledgerArgs = new String[]{String.valueOf(ledgerId)};\n"
+        "            db.delete(\"recurring_pending\",\n"
+        "                    \"rule_id IN (SELECT id FROM recurring_rules WHERE ledger_id=?)\",\n"
+        "                    ledgerArgs);\n"
+        "            db.delete(\"recurring_rules\", \"ledger_id=?\", ledgerArgs);\n"
+        "            db.delete(\"transaction_templates\", \"ledger_id=?\", ledgerArgs);\n"
+        "            db.delete(\"budgets\", \"ledger_id=?\", ledgerArgs);\n"
+        "            db.delete(\"transactions\", \"ledger_id=?\", ledgerArgs);\n"
+        "            db.delete(\"accounts\", \"ledger_id=?\", ledgerArgs);",
+        "V2 ledger cleanup",
     )
 
     verify_prepared(text)
