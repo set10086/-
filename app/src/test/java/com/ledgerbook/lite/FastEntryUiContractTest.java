@@ -19,7 +19,7 @@ public final class FastEntryUiContractTest {
         assertTrue(source.contains("复制上一笔"));
         assertTrue(source.contains("最近使用"));
         assertTrue(source.contains("更多设置"));
-        assertTrue(source.contains("advanced.setVisibility("));
+        assertTrue(source.contains("advancedView.setVisibility("));
     }
 
     private static String read(String relative) throws IOException {
